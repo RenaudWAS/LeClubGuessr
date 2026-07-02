@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le Club des DA Guessr</title>
+<style>
+  :root {
+    --orange: #FF4A11;
+    --ink: #0b0b0b;
+    --gray: #a8a5a0;
+    --line: #e3e1dd;
+    --bg: #fbfaf9;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: var(--bg); }
+  body {
+    background: linear-gradient(#e9e8e5, var(--bg) 260px);
+    color: var(--ink);
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 26px 40px;
+  }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logotext {
+    font-weight: 800; font-size: 14px; line-height: 1.05;
+    letter-spacing: 1.5px; text-transform: uppercase;
+  }
+  .lg-o { color: var(--orange); }
+  .hud { display: flex; gap: 12px; align-items: center; }
+  .pill {
+    border: 2px solid var(--ink); border-radius: 999px;
+    padding: 10px 22px; font-size: 14px; font-weight: 600;
+    background: transparent; white-space: nowrap;
+  }
+  .pill b { font-weight: 800; }
+  main { max-width: 1240px; margin: 0 auto; padding: 30px 40px 80px; }
+  @media (max-width: 700px) { header, main { padding-left: 18px; padding-right: 18px; } }
+
+  .catline { margin-bottom: 18px; }
+  .cat { color: var(--orange); font-weight: 700; font-size: 20px; letter-spacing: -0.2px; display: block; }
+  .subcat { color: var(--gray); font-weight: 600; font-size: 16px; }
+
+  .stage-grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 48px; align-items: start; }
+  @media (max-width: 900px) { .stage-grid { grid-template-columns: 1fr; gap: 26px; } }
+
+  .mediabox {
+    background: #fff; border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    min-height: 340px; max-height: 64vh; overflow: hidden; position: relative;
+  }
+  .mediabox img { max-width: 100%; max-height: 64vh; object-fit: contain; display: block; cursor: zoom-in; }
+  .lightbox {
+    position: fixed; inset: 0; z-index: 50; background: rgba(8,8,8,.93);
+    display: none; align-items: center; justify-content: center; overflow: hidden;
+  }
+  .lightbox.show { display: flex; }
+  .lightbox img { max-width: 94vw; max-height: 94vh; cursor: zoom-in; transition: transform .18s ease-out; }
+  .lightbox img.zoomed { transform: scale(2.4); cursor: zoom-out; }
+  .lightbox .lbclose {
+    position: fixed; top: 20px; right: 26px; z-index: 51;
+    background: none; border: 2px solid #fff; border-radius: 999px; color: #fff;
+    width: 44px; height: 44px; font-size: 18px; font-weight: 800; cursor: pointer; font-family: inherit;
+  }
+  .lightbox .lbclose:hover { background: var(--orange); border-color: var(--orange); }
+  .vwrap { position: relative; width: 100%; padding-top: 62%; background: #000; }
+  .vwrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .audioph {
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    gap: 10px; width: 100%; min-height: 340px; background: var(--orange); color: #fff;
+    font-size: 72px; font-weight: 800; line-height: 1;
+  }
+  .audioph span { font-size: 15px; text-transform: uppercase; letter-spacing: 4px; }
+  .audiobar {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 4;
+    padding: 10px 14px; background: rgba(255,255,255,.94); border-top: 1px solid var(--line);
+    display: none;
+  }
+  .audiobar audio { width: 100%; height: 36px; display: block; }
+  .mediabox .loading { color: var(--gray); font-size: 14px; font-weight: 600; }
+  .mediatag {
+    position: absolute; top: 14px; left: 14px; z-index: 3;
+    background: var(--ink); color: #fff; font-size: 11px; font-weight: 800;
+    letter-spacing: 1.5px; text-transform: uppercase; padding: 6px 12px; border-radius: 999px;
+    display: none;
+  }
+
+  .bigq {
+    font-size: clamp(38px, 4.6vw, 64px); font-weight: 800;
+    letter-spacing: -0.035em; line-height: 0.95; text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  .yearval {
+    font-size: clamp(56px, 6vw, 84px); font-weight: 800; letter-spacing: -0.03em;
+    color: var(--orange); font-variant-numeric: tabular-nums; line-height: 1;
+    margin-bottom: 6px;
+  }
+  input[type=range] {
+    width: 100%; appearance: none; -webkit-appearance: none; height: 3px;
+    background: var(--ink); outline: none; margin: 14px 0 6px;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none; width: 28px; height: 28px; border-radius: 50%;
+    background: var(--orange); cursor: pointer; border: 3px solid var(--bg);
+    box-shadow: 0 0 0 2px var(--ink);
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--orange); cursor: pointer; border: 3px solid var(--bg);
+    box-shadow: 0 0 0 2px var(--ink);
+  }
+  .rangelabels { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: var(--gray); margin-bottom: 34px; }
+
+  .smallq { font-size: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+  .agencywrap { position: relative; margin-bottom: 8px; }
+  #agencyInput {
+    width: 100%; padding: 10px 2px; border: none; border-bottom: 3px solid var(--ink);
+    background: transparent; color: var(--ink); font-size: 22px; font-weight: 700;
+    font-family: inherit; border-radius: 0;
+  }
+  #agencyInput::placeholder { color: var(--gray); font-weight: 600; }
+  #agencyInput:focus { outline: none; border-color: var(--orange); }
+  .suggestions {
+    position: absolute; top: 100%; left: 0; right: 0; z-index: 10;
+    background: #fff; border: 2px solid var(--ink);
+    margin-top: 6px; max-height: 230px; overflow-y: auto; display: none;
+  }
+  .suggestions div { padding: 11px 14px; cursor: pointer; font-size: 16px; font-weight: 600; }
+  .suggestions div:hover, .suggestions div.sel { background: var(--orange); color: #fff; }
+  .hint { font-size: 13px; color: var(--gray); font-weight: 600; margin-bottom: 26px; }
+
+  button.primary {
+    padding: 14px 38px; border: 2px solid var(--ink); border-radius: 999px;
+    background: var(--ink); color: #fff; font-size: 16px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 1px; cursor: pointer;
+    font-family: inherit; transition: background .12s, color .12s, border-color .12s;
+  }
+  button.primary:hover { background: var(--orange); border-color: var(--orange); color: #fff; }
+
+  /* Reveal */
+  .reveal { display: none; position: relative; }
+  .reveal.show { display: block; }
+  .stamp {
+    position: absolute; top: -18px; right: -6px; width: 128px; height: 128px;
+    transform: rotate(12deg); color: var(--ink); pointer-events: none;
+  }
+  .stamp.hot { color: var(--orange); }
+  .rcat { color: var(--orange); font-weight: 700; font-size: 17px; margin-bottom: 10px; }
+  .rtitle {
+    font-size: clamp(30px, 3.6vw, 52px); font-weight: 800; letter-spacing: -0.035em;
+    line-height: 0.98; text-transform: uppercase; margin-bottom: 16px; padding-right: 120px;
+  }
+  .byline { font-size: 19px; font-weight: 600; margin-bottom: 26px; }
+  .byline .u { border-bottom: 2px solid var(--ink); font-weight: 700; padding-bottom: 1px; }
+  .byline .pour { color: var(--gray); }
+  .factline { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); font-size: 15px; }
+  .factline .k { color: var(--gray); font-weight: 700; text-transform: uppercase; font-size: 12px; letter-spacing: 1px; padding-top: 2px; white-space: nowrap; }
+  .factline .v { text-align: right; font-weight: 600; }
+  .factline .v.ok { color: #1a9b4b; }
+  .factline .v.ko { color: var(--orange); }
+  .seelink { margin: 18px 0 22px; font-size: 14px; font-weight: 600; }
+  .seelink a { color: var(--ink); }
+
+  /* End screen */
+  .endscreen { display: none; text-align: center; padding: 30px 0 20px; }
+  .endscreen.show { display: block; }
+  .endscreen h2 { font-size: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: var(--gray); }
+  .endscreen .total {
+    font-size: clamp(80px, 12vw, 160px); font-weight: 800; letter-spacing: -0.04em;
+    line-height: 1; margin: 12px 0 2px;
+  }
+  .endscreen .of { color: var(--gray); font-weight: 700; margin-bottom: 26px; font-size: 14px; text-transform: uppercase; letter-spacing: 2px; }
+  .verdict { font-size: 20px; font-weight: 700; margin-bottom: 40px; color: var(--orange); }
+  .recap { max-width: 680px; margin: 0 auto 36px; text-align: left; }
+  .recap .row {
+    display: grid; grid-template-columns: 72px 1fr auto; gap: 16px; align-items: center;
+    background: #fff; border: 1px solid var(--line);
+    padding: 12px 16px; margin-bottom: -1px;
+  }
+  .recap img { width: 72px; height: 54px; object-fit: cover; }
+  .recap .t { font-size: 15px; font-weight: 700; }
+  .recap .t small { color: var(--gray); display: block; font-weight: 600; font-size: 12.5px; margin-top: 2px; }
+  .recap .pts { font-weight: 800; font-size: 18px; font-variant-numeric: tabular-nums; }
+
+  /* Hall of fame */
+  .hof { max-width: 460px; margin: 0 auto 44px; }
+  .hof h3 { font-size: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px; }
+  .hofform { display: flex; gap: 12px; justify-content: center; align-items: flex-end; margin-bottom: 20px; }
+  #hofName {
+    flex: 1; max-width: 220px; padding: 10px 2px; border: none; border-bottom: 3px solid var(--ink);
+    background: transparent; font-size: 18px; font-weight: 700; font-family: inherit; color: var(--ink);
+  }
+  #hofName::placeholder { color: var(--gray); font-weight: 600; }
+  #hofName:focus { outline: none; border-color: var(--orange); }
+  .hofform button { padding: 12px 26px; font-size: 13px; }
+  .hoflist { list-style: none; text-align: left; }
+  .hoflist li { display: flex; justify-content: space-between; padding: 10px 6px; border-top: 1px solid var(--line); font-weight: 600; font-size: 15px; }
+  .hoflist li.me { color: var(--orange); }
+  .hoflist .rank { color: var(--gray); margin-right: 12px; font-weight: 800; }
+  .hoflist li.me .rank { color: var(--orange); }
+  .hoflist .sc { font-weight: 800; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <div class="logotext">Le Club<br>des D.A.<br><span class="lg-o">Guessr</span></div>
+  </div>
+  <div class="hud">
+    <span class="pill">Manche <b id="hudRound">1</b>/5</span>
+    <span class="pill">Score <b id="hudScore">0</b></span>
+  </div>
+</header>
+
+<main>
+  <div id="stage">
+    <div class="catline">
+      <span class="cat" id="catHint">—</span>
+      <span class="subcat">Archives du Club des D.A. — 1968–2024</span>
+    </div>
+    <div class="stage-grid">
+      <div class="mediabox">
+        <span class="mediatag" id="mediaTag">Film</span>
+        <span class="loading" id="imgLoading">Chargement…</span>
+        <img id="campaignImg" style="display:none" alt="Campagne mystère">
+        <div class="vwrap" id="vidWrap" style="display:none"></div>
+        <div class="audioph" id="audioPh">♪<span>Spot radio</span></div>
+        <div class="audiobar" id="audioBar"><audio id="audioEl" controls preload="none"></audio></div>
+      </div>
+
+      <div class="controls">
+        <div id="guessPanel">
+          <h2 class="bigq">C'était quand&nbsp;?</h2>
+          <div class="yearval" id="yearVal">1996</div>
+          <input type="range" id="yearSlider" min="1968" max="2024" value="1996">
+          <div class="rangelabels"><span>1968</span><span>2024</span></div>
+
+          <div class="smallq">Et par quelle agence&nbsp;?</div>
+          <div class="agencywrap">
+            <input id="agencyInput" type="text" placeholder="Tape le nom d'une agence…" autocomplete="off" spellcheck="false">
+            <div class="suggestions" id="suggestions"></div>
+          </div>
+          <button class="primary" id="guessBtn" style="margin-top:26px">Valider</button>
+        </div>
+
+        <div class="reveal" id="revealPanel">
+          <svg class="stamp" id="stamp" viewBox="0 0 130 130" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="65" cy="65" r="62" fill="none" stroke="currentColor" stroke-width="2.5"/>
+            <path id="stampArc" d="M65,65 m-49,0 a49,49 0 1,1 98,0 a49,49 0 1,1 -98,0" fill="none"/>
+            <text font-size="11" font-weight="700" letter-spacing="3.2" fill="currentColor">
+              <textPath href="#stampArc">CLUB DES DA GUESSR • CLUB DES DA GUESSR</textPath>
+            </text>
+            <text id="stampPts" x="65" y="64" text-anchor="middle" font-size="26" font-weight="800" fill="currentColor">0</text>
+            <text x="65" y="84" text-anchor="middle" font-size="11" font-weight="700" letter-spacing="2" fill="currentColor">PTS / 5000</text>
+          </svg>
+          <div class="rcat" id="rCat"></div>
+          <h2 class="rtitle" id="rTitle"></h2>
+          <div class="byline"><span class="u" id="bAgency"></span> <span class="pour">pour</span> <span class="u" id="bClient"></span></div>
+          <div class="factline"><span class="k">Année</span><span class="v" id="rYear"></span></div>
+          <div class="factline"><span class="k">Agence</span><span class="v" id="rAgencyFact"></span></div>
+          <div class="seelink"><a id="rLink" href="#" target="_blank" rel="noopener">Voir la campagne sur leclubdesda.org ↗</a></div>
+          <button class="primary" id="nextBtn">Manche suivante</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="endscreen" id="endScreen">
+    <h2>Partie terminée</h2>
+    <div class="total" id="finalScore">0</div>
+    <div class="of">points sur 25 000</div>
+    <div class="verdict" id="verdict"></div>
+    <div class="hof">
+      <h3>Hall of Fame</h3>
+      <div class="hofform" id="hofForm">
+        <input id="hofName" type="text" maxlength="20" placeholder="Ton pseudo…" autocomplete="off" spellcheck="false">
+        <button class="primary" id="hofSave">Enregistrer</button>
+      </div>
+      <ol class="hoflist" id="hofList"></ol>
+    </div>
+    <div class="recap" id="recap"></div>
+    <button class="primary" id="replayBtn">Rejouer</button>
+  </div>
+</main>
+
+<div class="lightbox" id="lightbox">
+  <button class="lbclose" id="lbClose">✕</button>
+  <img id="lbImg" alt="Campagne en grand">
+</div>
+
+<script>
+const RAW = [["ASAP ROCKY - TAILOR SWIF - VANIA & MUGGIA","Prod Clip Musical","2024","Iconoclast","","T:2024/thumb/2024_28172--cover-86631-tailor-swif.png","asap-rocky-tailor-swif-vania-muggia-28976"],["Vieillir, ça peut faire peur.","Comm. Grandes causes","2024","STRIKE","Aides","T:2024/thumb/2024_28066--cover-83396-aides-2.jpg","vieillir-ca-peut-faire-peur-28801"],["Les Lettres de Krakovie","Prod VFX & Animation","2024","les monstres","Arnold Turboust","T:2024/thumb/2024_28364--cover-95710-krakovie-annecy-01.jpg","les-lettres-de-krakovie-29228"],["HABILLAGE DE NOËL","Motion design","2024","ARTE GEIE","Arte","T:2024/thumb/2024_28216--cover-87184-arte-visuels-fixes-900x900-rvb.png","habillage-de-noel-29030"],["Suburban Alternatives. Enquête sur l’habitat intermédiaire aux États-Unis","Design graphique","2024","Building Books","Building Books","T:2024/thumb/2024_28119--cover-84851-bb27-buildingbooks-suburban-19.jpg","suburban-alternatives-enquete-sur-lhabitat-intermediaire-aux-etats-unis-28889"],["40 ANS","Comm. Films & Divertissements","2024","Betc","Canal+","T:2024/thumb/2024_28149--cover-86030-kvwording.png","40-ans-2-28937"],["BELLISSIMO","Prod Films","2024","Division","Fila","T:2024/thumb/2024_28070--cover-83854-fila-bellissimo.jpg","bellissimo-28810"],["Les Portes","Comm. Craft Rédaction","2024","Betc","Heetch","T:2024/thumb/2024_28175--cover-85973-image-10.jpeg","les-portes-2-28980"],["We also do Motorcycles","Comm. extérieure & Print","2024","Ddb Paris","Honda Moto","T:2024/thumb/2024_28097--cover-88648-1-motorcycles-honda.jpg","we-also-do-motorcycles-28854"],["The Amateur Jersey","Comm. Direct Activation","2024","LAFOURMI","Intersport","T:2024/thumb/2024_28142--cover-94197-01.jpg","the-amateur-jersey-28930"],["Members Experience","Produits digitaux","2024","MERCI-MICHEL","Lacoste","T:2024/thumb/2024_28246--cover-88757-03.png","members-experience-29069"],["Va chier","Comm. Craft Rédaction","2024","Ddb Paris","Ligue Contre Le Cancer","T:2024/thumb/2024_28130--cover-93408-affiche-vachier.jpg","va-chier-28911"],["The final copy of Ilon Specht","Grand Prix","2024","Mccann Paris","L’oréal Paris","T:2024/thumb/2024_28399--cover-97753-documentaire-integral.png","the-final-copy-of-ilon-specht-29271"],["Olympic Curry","Social & Créateurs","2024","Ddb Paris","Mcdonald’s","T:2024/thumb/2024_28055--cover-87567-mcdonalds-olympic-curry-board-cda.jpg","olympic-curry-28779"],["NEW BALANCE SHOHEI OHTANI","Prod Films","2024","Division","New Balance","T:2024/thumb/2024_28094--cover-85089-new-balance-ohtani-two-swords.jpg","new-balance-shohei-ohtani-28847"],["PHOTO FIELD JAXX by TRAVIS SCOTT","Comm. Craft Image","2024","Division","Nike","T:2024/thumb/2024_28076--cover-85502-01.jpg","photo-field-jaxx-by-travis-scott-28822"],["UN SMARTPHONE POUR NOEL","Comm. Craft Direction Artistique","2024","Big Productions","Orange","T:2024/thumb/2024_28111--cover-84896-orange-noel-2024-dfd-vl-24112100-00-42-01still005.jpg","un-smartphone-pour-noel-28876"],["Look of the games","Branding design","2024","W CONRAN DESIGN","Paris 2024 Cojop","T:2024/thumb/2024_28360--cover-95603-01-explainatory-board.jpg","look-of-the-games-29219"],["LE MAILLOT DES RÊVES","Comm. Mode & Beauté","2024","OBVIOUS","Pièces Uniques","T:2024/thumb/2024_28237--cover-88321-le-maillot-des-reves.png","le-maillot-des-reves-29056"],["GENERATOR","Prod Clip Musical","2023","ASWAN","Ed Banger","T:2023/thumb/2023_27962--cover-81840-generator.png","generator-28662"],["EDF x GIMS","Comm. Direct Activation","2023","AustralieGAD","Edf","T:2023/thumb/2023_27885--cover-74971-le-parisien-254x336-edf-gims-np3.jpg","edf-x-gims-28555"],["COME AND CELEBRATE TOGETHER (projet fictif)","Concours Etudiant","2023","EFET STUDIO CREA - Lille","Efet Studio Crea - Lille","T:2023/thumb/2023_27850--cover-72639-dossier-club-des-da-pridehouse-page-05-copie.jpg","come-and-celebrate-together-projet-fictif-28501"],["La MAISON (The place to...) - (projet fictif)","Concours Etudiant","2023","EFET STUDIO CREA - Lille","Efet Studio Crea - Lille","T:2023/thumb/2023_27856--cover-72756-dossier-club-des-da-page-04.jpg","la-maison-the-place-to-projet-fictif-28510"],["Gare du Nord","Prod Clip Musical","2023","OMAR FILMS","Filigrane","T:2023/thumb/2023_27805--cover-81546-capture-decran-2024-03-15-a-160807.png","gare-du-nord-28427"],["Love me Tender","Comm. Grandes causes","2023","ALTMANN + PARTNERS","Fondation 30 Millions D’amis","T:2023/thumb/2023_27709--cover-70005-previsualisation-30ma.png","love-me-tender-28276"],["Modale Antique","Typographie","2023","Formagari","Formagari","T:2023/thumb/2023_28002--cover-80762-formagari-modale-antique-1-00001.jpg","modale-antique-28713"],["FREE NATIONALS GANGSTA","Prod Clip Musical","2023","Division","Free Nationals","T:2023/thumb/2023_27858--cover-73364-free-nationals.jpg","free-nationals-gangsta-28514"],["GESAFFELSTEIN GAMMA","Prod Clip Musical","2023","Division","Gesaffelstein","T:2023/thumb/2023_27859--cover-73346-gesaffelstein.jpg","gesaffelstein-gamma-28517"],["La Motrice Libérée","Branding design","2023","Landor","Groupe Sncf","T:2023/thumb/2023_27977--cover-81269-groupe-sncf-01.jpg","la-motrice-liberee-28683"],["Une histoire vraie - Vladimir De Fontenay","Prod Son","2023","Iconoclast","Gustave Roussy","T:2023/thumb/2023_27794--cover-71621-vladimir-de-fontenay-gustave.png","une-histoire-vraie-vladimir-de-fontenay-28408"],["Décoder les femmes","Comm. Grandes causes","2023","Tbwa\\Paris","Handsaway","T:2023/thumb/2023_27877--cover-73639-decoding-women-presentation.jpg","decoder-les-femmes-28545"],["Greetings from la banlieue","Expériences digitales","2023","Betc","Heetch","T:2023/thumb/2023_27819--cover-76511-heetch-gflb-dad12.jpg","greetings-from-la-banlieue-28444"],["Campagne Descrozaille","Comm. extérieure & Print","2023","Romance","Intermarché","T:2023/thumb/2023_27948--cover-77907-1gel-douche.jpg","campagne-descrozaille-28636"],["La vie chère","Comm. Films & Divertissements","2023","Romance","Intermarché","T:2023/thumb/2023_27950--cover-77987-previs-steak.png","la-vie-chere-3-28639"],["ROSE FLUO","Prod VFX & Animation","2023","les monstres","Irene Dresel","T:2023/thumb/2023_27793--cover-71527-capture-0000.jpg","rose-fluo-28407"],["Hippocrate 2023","Social & Créateurs","2023","Ogilvy Paris","Isni","T:2023/thumb/2023_27931--cover-77694-isni-couv.jpg","hippocrate-2023-28616"],["Hayward 'Magic'","Prod VFX & Animation","2021","Art Bridge - Quad Group","Wizz / Quad Group","T:2021/thumb/2021_27171--cover-49081-vlcsnap-2021-12-03-17h37m50s072.png","hayward-magic-27532"],["L'Appel","Prod Son","2021","Aoc","30 Millions D’amis","T:2021/thumb/2021_27199--cover-50172-30mda-ours-2.jpg","lappel-2-27574"],["A$AP FERG - GREEN JUICE FT. PHARRELL WILLIAMS","Prod Clip Musical","2021","Division","A$Ap Ferg","T:2021/thumb/2021_27061--cover-46638-asap-ferg-green-juice.png","aap-ferg-green-juice-ft-pharrell-williams-27353"],["Le Bon Pote","Prod Films","2021","DeGaulle","Acadomia","T:2021/thumb/2021_27236--cover-52302-anglais-4.jpeg","le-bon-pote-27619"],["Une année 2020","Design graphique","2021","Éditions Non Standard","Ag2R La Mondiale","T:2021/thumb/2021_27221--cover-51273-ag2r-35.jpg","une-annee-2020-27602"],["Graciela Iturbidé, Heliotropo 37","Design graphique","2021","AGNÈS DAHAN STUDIO","Agnès Dahan Studio / Fondation Cartier Pour L’art Contemporain","T:2021/thumb/2021_27308--cover-55352-cartier-poster-metro-1-r.jpg","graciela-iturbide-heliotropo-37-27697"],["FESTIVAL DOCUMENTAIRE","Motion design","2021","ARTE GEIE","Arte","T:2021/thumb/2021_27285--cover-53998-couv2.jpg","festival-documentaire-27674"],["Avec plaisir","Prod Son","2021","Chut ! on vous écoute","Auchan","T:2021/thumb/2021_27107--cover-47277-capture-decran-2022-02-15-a-113856.png","avec-plaisir-27426"],["Killer Social Club (Saison 1)","Comm. Craft Rédaction","2021","Engle","Audible","T:2021/thumb/2021_27241--cover-52406-cover.jpg","killer-social-club-saison-1-27626"],["BALENCIAGA - THE LOST TAPE","Prod Films Mode","2021","Iconoclast France","Balenciaga","T:2021/thumb/2021_27112--cover-49570-capture-decran-2022-03-02-a-084047.png","balenciaga-the-lost-tape-27433"],["Elden Ring Story Trailer","Prod VFX & Animation","2021","Unit Image","Bandai Namco","T:2021/thumb/2021_27196--cover-50030-image-previsualisation.png","elden-ring-story-trailer-27570"],["Keep on Fallin'","Prod Son","2021","Frenzy","Bouygues Telecom","T:2021/thumb/2021_27207--cover-50615-image-de-previsualisation-def.png","keep-on-fallin-27583"],["#MERCILES2010","Social & Créateurs","2021","Buzzman","Burger King France","T:2021/thumb/2021_27165--cover-49909-capture-decran-2022-03-03-a-141706.png","merciles2010-27525"],["Fièrement normal","Comm. extérieure & Print","2021","Buzzman","Celio","T:2021/thumb/2021_27052--cover-47429-celio-fierement-normal-4x3-2.jpeg","fierement-normal-27338"],["Sea and be seen","Image Photo","2021","MILES","Dazed","T:2021/thumb/2021_27159--cover-48705-1631874583-000091770003.jpeg","sea-and-be-seen-27515"],["Teddy Riner","Prod Films","2021","MILES","Decathlon","T:2021/thumb/2021_27166--cover-50664-decathlon-riner.png","teddy-riner-27526"],["Best Story Ever","Comm. Craft Rédaction","2021","Capitaine Plouf x Konbini","Deezer","T:2021/thumb/2021_27164--cover-52278-best-story-ever-s02-deezer-konbini-wikipedia-cover-final-v2.jpg","best-story-ever-27524"],["Ariane Odyssey","Comm. extérieure & Print","2021","FrancineFramboise","Devialet","T:2021/thumb/2021_27243--cover-52408-capture-decran-2022-04-04-a-173139.png","ariane-odyssey-27628"],["Telerama Transclasses","Image Illustration","2019","We Love Art","Telerama","T:2019/thumb/2019_26758--cover-36086-telerama-transclasses-2.jpg","telerama-transclasses-26890"],["The Anonymous Project","Design graphique","2019","AGNÈS DAHAN STUDIO","Textuel","T:2019/thumb/2019_26730--cover-34987-couv-anonymous-recto.jpg","the-anonymous-project-26861"],["Electro - De Kraftwerk à Daft Punk","Design graphique","2019","AGNÈS DAHAN STUDIO","Textuel & Philharmonie De Paris","T:2019/thumb/2019_26729--cover-34973-couv-electro.jpg","electro-de-kraftwerk-a-daft-punk-26860"],["Europe des Voyageurs","Comm. Craft Rédaction","2019","Ddb Paris","Thalys","T:2019/thumb/2019_26503--cover-23834-thalys-4-etranger.jpg","europe-des-voyageurs-26544"],["Statistiques","Comm. Craft Rédaction","2019","Ddb Paris","Thalys","T:2019/thumb/2019_26530--cover-25739-video-dusseulquoi.png","statistiques-26582"],["Massalia ghost","Image Illustration","2019","Et d'eau fraîche","Théâtre Massalia","T:2019/thumb/2019_26685--cover-31687-3600x1536-massalia-05.jpg","massalia-ghost-26808"],["True Colors","Prod Son","2019","Chut ! on vous écoute","Tropico","T:2019/thumb/2019_26506--cover-25815-zoe.jpg","true-colors-26551"],["Spoiler Codes","Comm. Direct Activation","2019","Ddb Paris","Uber Eats","T:2019/thumb/2019_26477--cover-23858-spoiler-codes-case-study.png","spoiler-codes-26503"],["ECHOs","Innovations","2019","Ddb Paris","Ubisoft","T:2019/thumb/2019_26439--cover-25936-echos2.png","echos-26439"],["Green Dawn","Comm. Direct Activation","2019","Ddb Paris","Ubisoft","T:2019/thumb/2019_26472--cover-23222-green-dawn-case-study.png","green-dawn-26490"],["Big Bad Wolves","Comm. Films & Divertissements","2019","Ddb Paris","Ubisoft","T:2019/thumb/2019_26474--cover-23724-1-wolves-in-the-wood.png","big-bad-wolves-26497"],["The Cemetery - Rainbow Six Siege","Comm. Films & Divertissements","2019","Clm Bbdo","Ubisoft","T:2019/thumb/2019_26509--cover-25322-ubisoft-r6siege-vlongue-a-mix-web-v1-19052300-00-41-22still001.jpg","the-cemetery-rainbow-six-siege-26556"],["Cako","Branding design","2019","Violaine Et Jérémy","Vj Type","T:2019/thumb/2019_26745--cover-35709-visu-cako-01.jpg","cako-26877"],["Voyage","Branding design","2019","Violaine Et Jérémy","Vj Type","T:2019/thumb/2019_26746--cover-35719-visu-voyage-01.jpg","voyage-26878"],["VW-Stories Illu","Image Illustration","2019","Ddb Paris","Volkswagen","T:2019/thumb/2019_26600--cover-28347-vw-w-stories-capture.jpg","vw-stories-illu-26690"],["Scénarios - Presse","Comm. Craft Rédaction","2019","Ddb Paris","Volkswagen Service","T:2019/thumb/2019_26521--cover-25791-vw-scenario-1-roadmovie.jpg","scenarios-presse-26573"],["Kekra, Putain de salaire","Prod Clip Musical","2019","Solab","Vrl","T:2019/thumb/2019_26617--cover-29631-sans-titre-1.png","kekra-putain-de-salaire-26715"],["Ego","Presse","2015","Ddb Paris","Musée De La Grande Guerre","C:2015-20744v1.jpg","ego-21347"],["Epiphany","Prod Son","2015","Capitaine Plouf","Nespresso","C:2015-20824v1.jpg","epiphany-21588"],["Les 30 ans de Jordan à Paris","Evénementiel","2015","Collectif","Nike","K:2015-20980v1.jpg","nike-les-30-ans-de-jordan-a-paris-21959"],["Site de l'Opéra National de Paris et la 3è Scène","Social & Créateurs","2015","Dream On","Opéra National De Paris","C:2015-20871v1.png","site-de-lopera-national-de-paris-et-la-3e-scene-21732"],["La Grande Sortie","Prod Clip Musical","2015","Slowdance","Opéra National De Paris - 3È Scène","C:2015-20899v1.jpg","opera-national-de-paris-3e-scene-la-grande-sortie-21801"],["Ajoutez un véritable ami","Comm. extérieure & Print","2015","Clm","Pedigree","K:2015-20724v1.jpg","ajoutez-un-veritable-ami-21287"],["PopCorn Garage","Social & Créateurs","2015","Popcorn Garage","Popcorn Garage","C:2015-20746v1.jpg","popcorn-garage-21355"],["Biennale Internationale de Saint Etienne","Branding design","2015","Iona Vautrin","Saint Etienne","K:2015-20975v1.jpg","saint-etienne-biennale-internationale-de-saint-etienne-21947"],["Dashboard","Social & Créateurs","2015","Sid Lee Paris","Sid Lee","C:2015-20777v1.jpg","dashboard-21446"],["Stylist","Edition","2015","Stylist","Stylist","K:2015-20951v1.jpg","stylist-21906"],["Le musée des plages","Craft - Film","2015","Y&R Paris","Surfrider Fondation","C:2015-20890v1.png","le-musee-des-plages-21782"],["Orcines","Branding design","2015","Be Dandy","The Whisky Lodge","K:2015-20702v1.jpg","orcines-21226"],["Snackholidays","Campagne intégrée","2015","Les Gaulois","Transavia","C:2015-20893v1.jpg","snackholidays-2-21790"],["TU-Nantes, scène conventionnée théâtre","Edition","2015","Akatre","Tu-Nantes","K:2015-20955v1.png","tu-nantes-tu-nantes-scene-conventionnee-theatre-21913"],["Le marathonien","Comm. extérieure & Print","2015","Ogilvy Paris","Water For Africa","C:2015-20790v1.jpg","le-marathonien-21488"],["Long Lasting Sharpness","Presse","2015","Herezie","Zwilling J.a. Henckels  - Miyabi","K:2015-20742v1.jpg","long-lasting-sharpness-2-21342"],["Où est le Poisson","Concours Etudiant","2015","Ecole Brassart Campus Nantes","7Ème Continent","K:2015-20695v1.jpg","ou-est-le-poisson-21204"],["Georges","Comm. Films & Divertissements","2015","Les Gaulois","Acadomia","C:2015-20931v1.png","georges-21864"],["Ouï FM","Comm. extérieure & Print","2011","Leg","Oui Fm","C:2011-18088v1.jpg","oui-fm-19946-19946"],["Piper Heidsieck","Comm. Direct Activation","2007","Vue Sur La Ville","Piper Heidsieck","C:2007-16066v1.jpg","piper-heidsieck-18141-18141"],["Mieux informés","Concours Etudiant","2007","Esaat","Presse Quotidienne","C:2007-16047v1.jpg","mieux-informes-18101"],["Dj Mehdi","Prod Clip Musical","2007","Elnino","Signatune","C:2007-16079v1.jpg","dj-mehdi-18178"],["Compression","Comm. Craft Image","2007","Publicis Conseil","Stihl","C:2007-16002v1.jpg","compression-18010-18011"],["Magiczaoza.com","Social & Créateurs","2007","Buzzman","Vivendi Mobile Entertainment","C:2007-15956v1.jpg","magiczaozacom-17890"],["Risk","Comm. extérieure & Print","2007","Ddb Paris","Volkswagen Utilitaires","C:2007-15922v1.jpg","risk-3-17814"],["Gali","Comm. Films & Divertissements","2007","Betc Euro Rscg","13Eme Rue","O:2007/2007_15938v1.jpg","gali-17846"],["Site agence australie","Social & Créateurs","2007","Australie","Australie","C:2007-15950v1.jpg","site-agence-australie-17874"],["Brise Auto","Comm. extérieure & Print","2003","Fcb","Sc Johnson","C:2003-171v1.jpg","brise-auto-16261"],["Seafrance","Radio","2003","Louis Xiv Ddb","Seafrance","O:2003/2003_381v1.jpg","seafrance-16758"],["Sidaction - Ensemble Contre Le Sida","Comm. Films & Divertissements","2003","Euro Rscg C O","Sidaction - Ensemble Contre Le Sida","C:2003-294v1.jpg","sidaction-ensemble-contre-le-sida-16623"],["Eurostar","Comm. extérieure & Print","2003","Leg","Sncf","C:2003-050v1.jpg","eurostar-16008-16007"],["Sncf - Eurostar","Comm. Direct Activation","2003","Leg","Sncf - Eurostar","C:2003-182v1.jpg","sncf-eurostar-16297-16297"],["Ps2","Presse","2003","Tbwa Paris","Sony Playstation","C:2003-106v1.jpg","ps2-16119-16119"],["Le Monde","Comm. Films & Divertissements","1998","Euro Rscg, Babinet, Erra Tong Cuong","Le Monde","C:1998-201v1.jpg","le-monde-14911-14911"],["Le Nouvel Observateur","Comm. Films & Divertissements","1998","Louis Xiv","Le Nouvel Observateur","C:1998-205v1.jpg","le-nouvel-observateur-14922"],["LES PETITS FRERES DES PAUVRES","Comm. extérieure & Print","1998","Euro Rscg Corporate","Les Petits Freres Des Pauvres","C:1998-102v1.jpg","les-petits-freres-des-pauvres-14670"],["Les Petits Frères Des Pauvres","Comm. Films & Divertissements","1998","Euro Rscg Corporate","Les Petits Freres Des Pauvres","C:1998-228v1.jpg","les-petits-freres-des-pauvres-14989-14989"],["Liberation","Presse","1998","Devarrieuxvillaret","Liberation","O:1998/1998_165v1.jpg","liberation-3-14814"],["Maaf Assurances","Comm. Films & Divertissements","1998","Ogilvy & Mather","Maaf Assurances","C:1998-242v1.jpg","maaf-assurances-15032"],["Macif","Comm. extérieure & Print","1998","Jean & Montmarin","Macif","C:1998-138v1.jpg","macif-14740"],["Mars","Comm. Films & Divertissements","1998","Clm/Bbdo","Mars","C:1998-221v1.jpg","mars-14968"],["Mc Cain","Comm. Films & Divertissements","1998","Bddp@Tbwa","Mc Cain","C:1998-237v1.jpg","mc-cain-15016-15016"],["Mc Donald’s","Comm. Films & Divertissements","1998","Bddp@Tbwa","Mc Donald’s","C:1998-273v1.jpg","mc-donalds-15125-15123"],["MERCEDES","Comm. extérieure & Print","1998","Devarrieuxvillaret","Mercedes","C:1998-050v1.jpg","mercedes-14517"],["MICRO COMPACT CAR SMART GMBH","Comm. extérieure & Print","1998","Weber, Hodel, Schmid","Micro Compact Car Smart Gmbh","C:1998-035v1.jpg","micro-compact-car-smart-gmbh-2-14471"],["VAG - POLO","Radio","1993","Ddb Needham","Vag - Polo","O:1993/1993_378v1.jpg","vag-polo-3-13609"],["3 SUISSES (CATALOGUE)","Comm. Films & Divertissements","1993","Bddp","3 Suisses (Catalogue)","C:1993-357v1.jpg","3-suisses-catalogue-13544"],["AER LINGUS","Comm. extérieure & Print","1993","Bl/Lb","Aer Lingus","C:1993-099v1.jpg","aer-lingus-12814"],["AFAA","Hors media","1993","Compagnie Bernard Baissait","Afaa (Association Francaise D’action Artistique)","C:1993-272v1.jpg","afaa-13294"],["AFLS","Radio","1993","Alice","Afls","O:1993/1993_434v1.jpg","afls-13777"],["AIDES","Comm. extérieure & Print","1993","Bddp/Joker","Aides (Lutte Contre Le Sida)","C:1993-160v1.jpg","aides-12981-12981"],["AIDES","Comm. extérieure & Print","1993","Bddp","Aides - Lutte Contre Le Sida","C:1993-148v1.jpg","aides-12955-12954"],["APPLE","Hors media","1993","Clm/Bbdo","Apple","C:1993-254v1.jpg","apple-13239"],["ARTHUR MARTIN","Comm. Films & Divertissements","1993","Fenech Et Le Barazer Associes","Arthur Martin","C:1993-346v1.jpg","arthur-martin-13477"],["ARTRON (SCHNEIDER)","Comm. extérieure & Print","1993","Australie","Artron (Schneider)","C:1993-132v1.jpg","artron-schneider-12907"],["ASSOCIATION POUR LA PROMOTION DES ARTS","Comm. extérieure & Print","1993","Compagnie Bernard Baissait","Association Pour La Promotion Des Arts Hôtel De Ville De Paris","C:1993-231v1.jpg","association-pour-la-promotion-des-arts-13171"],["AUDI","Comm. extérieure & Print","1993","Ddb","Audi","C:1993-098v1.jpg","audi-12813-12813"],["QUENELLES PETITJEAN","Comm. Films & Divertissements","1988","Ddb Needham","Quenelles Petitjean","C:1988-12507v1.jpg","quenelles-petitjean-11178"],["RATP","Comm. extérieure & Print","1988","Ecom Et Partenaire","Ratp","C:1988-14748v1.jpg","ratp-11367-11367"],["RODIER","Comm. extérieure & Print","1988","Bddp","Rodier","C:1988-12353v1.jpg","rodier-11059-11059"],["SCHNEIDER","Comm. Films & Divertissements","1988","Australie","Schneider","C:1988-12491v1.jpg","schneider-11162-11162"],["LE JOUET SEAT","Comm. extérieure & Print","1988","Tbwa","Seat","C:1988-14645v1.jpg","le-jouet-seat-2-11266"],["LES POMMES","Comm. extérieure & Print","1988","Alice","Sopexa","C:1988-12357v1.jpg","les-pommes-11066"],["SOUPLINE","Comm. Films & Divertissements","1988","Young  & Rubicam","Soupline","C:1988-12492v1.jpg","soupline-11163"],["TAM-TAM SAGAIE","Comm. extérieure & Print","1988","Ddb Needham","Tam-Tam Sagaie","C:1988-12092v1.jpg","tam-tam-sagaie-10942"],["Après-rasage","Comm. extérieure & Print","1984","Dyade","Sunbeam","C:1984-11323v1.jpg","apres-rasage-9552-9552"],["SUNKIST","Comm. extérieure & Print","1984","Ddb","Sunkist","C:1984-11851v1.jpg","sunkist-2-9686"],["SURFACE","Hors media","1984","Surface","Surface","C:1984-12117v1.jpg","surface-3-9737"],["TANG","Comm. extérieure & Print","1984","Grey","Tang","C:1984-11836v1.jpg","tang-9672-9672"],["Fromage","Comm. Films & Divertissements","1984","Ogilvy & Mather","Tartare","C:1984-12309v1.jpg","fromage-9807-9807"],["TBWA","Hors media","1984","Tbwa","Tbwa","C:1984-12121v1.jpg","tbwa-9742-9741"],["TELE POCHE","Hors media","1984","Ddrb","Tele Poche","C:1984-12119v1.jpg","tele-poche-9739-9739"],["THEATRE DES CHAMPS ELYSEES","Comm. extérieure & Print","1984","Surface","Theatre Des Champs Elysees","C:1984-11792v1.jpg","theatre-des-champs-elysees-9628"],["TOBLERONE","Comm. extérieure & Print","1984","Dupuy Saatchi & Saatchi Compton","Toblerone","C:1984-11876v1.jpg","toblerone-2-9711"],["TRANSPORT URBAIN","Comm. extérieure & Print","1984","Ecom Univas","Transport Urbain","C:1984-11872v1.jpg","transport-urbain-2-9706"],["Vins","Comm. extérieure & Print","1984","References","Ucavic","C:1984-11791v1.jpg","vins-9627-9627"],["Meubles","Presse","1984","Concurrence Moderne","Vickers-Roneo","C:1984-11821v1.jpg","meubles-2-9658"],["VILLE DU PUY","Hors media","1984","J. Walter Thompson","Ville Du Puy","C:1984-12152v1.jpg","ville-du-puy-ville-du-puy-9772"],["Vins","Hors media","1984","Concept Groupe","Vin Chateau La Berriere","C:1984-12153v1.jpg","vin-chateau-la-berriere-vins-9773"],["WELCOMME","Comm. extérieure & Print","1984","Boulet Dru Dupuy Petit","Welcomme","C:1984-11343v1.jpg","welcomme-9571"],["WRANGLER","Presse","1984","Dupuy Saatchi & Saatchi Compton","Wrangler","C:1984-11813v1.jpg","wrangler-3-9648"],["EVIAN","Comm. Films & Divertissements","1979","Dupuy Compton","Evian","C:1979-11159v1.jpg","evian-7048-7047"],["FIDO","Comm. Films & Divertissements","1979","Clm Bbdo","Fido","C:1979-11180v1.jpg","fido-7066-7063"],["FINDUS","Comm. Films & Divertissements","1979","F.c.a","Findus","C:1979-11183v1.jpg","findus-7069"],["FLAMMARION","Comm. extérieure & Print","1979","Synergie","Flammarion","C:1979-9540v1.jpg","flammarion-flammarion-2-6951"],["FRANCINE","Comm. Films & Divertissements","1979","F.c.a","Francine","C:1979-11167v1.jpg","francine-7054-7054"],["FRANPRIX","Hors media","1979","Taurus","Franprix","C:1979-9566v1.jpg","franprix-2-6976"],["GALERIES LAFAYETTE","Comm. extérieure & Print","1979","Belier","Galeries Lafayette","C:1979-9425v1.jpg","galeries-lafayette-6868-6868"],["GENERAL MOTORS FRANCE","Comm. extérieure & Print","1979","Mc Cann Erickson","General Motors France","C:1979-9434v1.jpg","general-motors-france-6877"],["GERVILLAGE","Comm. Films & Divertissements","1979","Tbwa","Gervais","C:1979-11185v1.jpg","gervillage-3-7071"],["GERVAIS - PETIT SUISSE","Comm. extérieure & Print","1979","Ted Bates","Gervais - Petit Suisse","C:1979-9349v1.jpg","gervais-petit-suisse-6794"],["GERVAIS DANONE","Comm. Films & Divertissements","1979","Young  & Rubicam","Gervais Danone","C:1979-11162v1.jpg","gervais-danone-7049-7049"],["TERRAILLON","Comm. extérieure & Print","1973-1974","Tbwa","Terraillon","C:1973-6996v1.jpg","terraillon-2175-2175"],["PNEUS","Hors media","1973-1974","Ddb","Uniroyal","C:1973-7656v1.jpg","uniroyal-pneus-7-2330"],["JAPAN AIR LINES","Hors media","1973-1974","Leydier Ketchum","Japan Air Lines","C:1973-7648v1.jpg","japan-air-lines-2322-2322"],["LOCASIM","Hors media","1973-1974","Feldman Calleux Et Associes Cdp","Locasim","C:1973-7638v1.jpg","locasim-2-2312"],["CULLIGAN-FRANCE","Comm. extérieure & Print","1968-1969","Ducamp Lorin Leydier","Culligan-France","C:1968-1969-6008v1.jpg","culligan-france-culligan-france-1-800"],["DIPARCO","Comm. extérieure & Print","1968-1969","Young  & Rubicam","Diparco","C:1968-1969-6144v1.jpg","diparco-912"],["VETEMENTS POUR ENFANTS","Hors media","1968-1969","Ducamp Lorin Leydier","Ozona","C:1968-1969-6346v1.jpg","vetements-pour-enfants-1010-1010"],["Banga","Comm. extérieure & Print","1968-1969","Young  & Rubicam","Pampryl","C:1968-1969-6569v1.jpg","banga-1032"],["RODIER","Comm. extérieure & Print","1968-1969","Snip","Rodier","C:1968-1969-6611v1.jpg","rodier-1074-1074"],["TWA","Comm. extérieure & Print","1968-1969","Wells Rich Greene","Twa","C:1968-1969-6130v1.jpg","twa-901-901"],["AER LINGUS","Comm. extérieure & Print","1968-1969","Collet Dickenson Pearce","Aer Lingus","O:1968-1969/1968-1969_6109v1.jpg","aer-lingus-aer-lingus-878"],["ALLIANCE FRANCAISE","Comm. extérieure & Print","1968-1969","Young  & Rubicam","Alliance Francaise","C:1968-1969-6054v1.jpg","alliance-francaise-2-840"],["THE REALEST AD","Comm. Direct Activation","2024","We Are Social","Avène","T:2024/thumb/2024_28230--cover-88593-the-realest-ad.png","the-realest-ad-29048"],["Retrouvons Notre Fraternité","Comm. Films & Divertissements","2024","Marcel","Licra","T:2024/thumb/2024_28137--cover-86508-cover-licra-copie.jpg","retrouvons-notre-fraternite-28923"],["La Campagne la plus Solidaire","Comm. Grandes causes","2024","Marcel","Secours Populaire","T:2024/thumb/2024_28199--cover-92029-cda2.png","la-campagne-la-plus-solidaire-29009"],["Conduisez comme une femme","Comm. extérieure & Print","2024","Media.Monks Paris","Victimes & Citoyens","T:2024/thumb/2024_28112--cover-89597-generic-1.jpg","conduisez-comme-une-femme-28878"],["Pas à vendre","Comm. extérieure & Print","2024","The Good Company","Cnp Assurances","T:2024/thumb/2024_28140--cover-87505-kv-1-cnp-copie.jpg","pas-a-vendre-28928"],["LES CENTENAIRES","Social & Créateurs","2024","The Good Company","Monoprix - Groupe Casino","T:2024/thumb/2024_28157--cover-96774-board-les-centenaires.jpg","les-centenaires-28951"],["#BatardDonneur","Comm. Grandes causes","2023","We Are Social","Bâtard Magazine","T:2023/thumb/2023_27756--cover-75988-kv-16-9-1.jpg","batarddonneur-28353"],["Born in 1853. Made for the future","Expériences digitales","2023","Mnstr","Guerlain","T:2023/thumb/2023_27908--cover-75989-guerlain-16-9-kv.jpg","born-in-1853-made-for-the-future-28588"],["Reaverse","Comm. Grandes causes","2022","Mnstr","Guerlain","T:2022/thumb/2022_27423--cover-60453-knzpz59iua9ddb3htmqb6hju7wqc-oxcbprir-jpsvq.jpg","reaverse-27886"],["Design global AEMA groupe","Branding design","2021","Babel","Aema","T:2021/thumb/2021_27259--cover-52981-4.png","design-global-aema-groupe-27646"],["#AnInvitationToPiquia","Comm. Grandes causes","2020","Babel","Fidh - Federation Internationale Pour Les Droits Humains","T:2020/thumb/2020_26951--cover-43408-capture-decran-2021-05-05-a-155300.png","aninvitationtopiquia-27202"],["Les 20 ans","Comm. Craft Image","2017","Marie Bastille Pour Babel","E Leclerc","C:2017-21494v1.jpg","les-20-ans-25758"],["Apero Casaq","Branding design","2015","Be Dandy","Le Trot","K:2015-20701v1.jpg","apero-casaq-21223"],["Ubisoft","Social & Créateurs","2016","Buzzman","Ubisoft","C:2016-21007v1.jpg","ubisoft-22000-22001"],["FFC (Fédération Française de Cardiologie)","Comm. Films & Divertissements","2017","Humanseven","Ffc (Fédération Française De Cardiologie)","C:2017-21313v1.jpg","ffc-federation-francaise-de-cardiologie-25587"],["Little Big Change","Comm. Films & Divertissements","2018","Buzzman","Little Big Change","C:2018-21899v1.jpg","little-big-change-26150"],["Fake 4 Good","Comm. Grandes causes","2019","La Chose","Solidarité Sida","T:2019/thumb/2019_26484--cover-23223-visu-ref-fake4good.jpg","fake-4-good-26512"],["La Ruche a plein de choses à dire","Comm. Craft Rédaction","2020","The Good Company","La Ruche Qui Dit Oui !","T:2020/thumb/2020_26811--cover-36929-lrqdo-bottes.jpg","la-ruche-a-plein-de-choses-a-dire-27000"],["Le jour où les anges ont pleuré","Image Illustration","2021","Marie Bastille","Flammarion","T:2021/thumb/2021_27327--cover-56077-rgb-3rd-11september-flammarion.jpg","le-jour-ou-les-anges-ont-pleure-27718"],["LES CÉSARS - HOLLYWOOD INSTITUTE","Prod Films","2022","Iconoclast France","Les Césars","T:2022/thumb/2022_27414--cover-57893-capture-decran-2023-02-21-a-093440.png","les-cesars-hollywood-institute-27870"],["HORSE","Branding design","2023","4Uatre","Groupe Renault","T:2023/thumb/2023_28009--cover-81070-horse-branding-video.png","horse-28725"],["Art Unlocked - the (very) illegal exhibition","Comm. extérieure & Print","2024","Simon LAMASA","59Rivoli","T:2024/thumb/2024_28286--cover-90768-image-case-art-unlocked-rivoli.jpg","art-unlocked-the-very-illegal-exhibition-29131"],["Sorry","Comm. Films & Divertissements","2015","Bbdo","Smart","C:2015-20907v1.jpg","sorry-21820"],["Solidarité Femmes","Evénementiel","2016","Buzzman","Elle’s Imaginent","K:2016-21038v1.png","solidarite-femmes-22030"],["Up","Comm. extérieure & Print","2017","Ddb Paris","Volkswagen","C:2017-21367v1.jpg","up-2-25640"],["Artazart - Panoramiques - Pierre de Vallombreuse","Design graphique","2018","Club Des Directeurs Artistiques","Artazart - Panoramiques - Pierre De Vallombreuse","C:2018-22174v1.jpg","artazart-panoramiques-pierre-de-vallombreuse-artazart-panoramiques-pierre-de-vallombreuse-26424"],["Compte Instagram Benjamin Schmuck","Image Photo","2019","We Love Art","Benjamin Schmuck","T:2019/thumb/2019_26750--cover-35600-insta006.jpeg","compte-instagram-benjamin-schmuck-26882"],["La vie - Film","Comm. Films & Divertissements","2020","Ddb Paris","Délégation À La Sécurité Routière","T:2020/thumb/2020_26798--cover-42014-capture-decran-2021-04-21-a-102319.png","la-vie-film-26969"],["ENGIE - NO ENERGY TO WASTE","Prod Films","2021","Iconoclast France","Engie","T:2021/thumb/2021_27072--cover-49255-capture-decran-2022-03-02-a-123830.png","engie-no-energy-to-waste-27370"],["Soyez l'homme que vous voulez être","Comm. Craft Rédaction","2022","BETC FULLSIX","Délégation À La Sécurité Routière","T:2022/thumb/2022_27655--cover-66536-securite-routiere-x-betc-fullsix-9.jpg","soyez-lhomme-que-vous-voulez-etre-28202"],["Out Side (livre)","Expériences digitales","2023","JBE Books","Jbe Books","T:2023/thumb/2023_27752--cover-70588-go-01.jpg","out-side-livre-28347"],["130 ANS – ILLUSTRATIONS PATRIMOINE","Comm. Craft Image","2024","Ddb Paris","Galeries Lafayette","T:2024/thumb/2024_28128--cover-93414-130-ans-illustrations-patrimoine-case-1.png","130-ans-illustrations-patrimoine-28904"],["Oui mais non - L'entretien","Comm. Films & Divertissements","2015","Ddb Paris","Volkswagen","C:2015-20882v1.png","oui-mais-non-lentretien-21765"],["Agence de la Biomedecine","Comm. Films & Divertissements","2016","Ddb Paris","Agence De La Biomedecine","C:2016-21152v1.png","agence-de-la-biomedecine-22143"],["Le robot","Comm. extérieure & Print","2017","Tbwa\\Paris","Playstation","C:2017-21349v1.jpg","le-robot-25622"],["WWF","Comm. Grandes causes","2018","Frenzy Paris","Wwf","C:2018-21939v1.png","wwf-26190-26190"],["Post Racism","Comm. Grandes causes","2019","Leo Burnett","Licra","T:2019/thumb/2019_26513--cover-23874-board-sept2019.jpg","post-racism-26561"],["Co2ncious (Digital)","Social & Créateurs","2020","Betc","Back Market","T:2020/thumb/2020_26953--cover-41701-back-market-co2nciouskv.jpg","co2ncious-digital-27205"],["Changer nous fait avancer","Prod Films","2021","Henry","Castorama","T:2021/thumb/2021_27204--cover-50486-kuntz-castorama-img5.png","changer-nous-fait-avancer-27580"],["Inside Jobs","Social & Créateurs","2022","Ddb Paris","Volkswagen Group France","T:2022/thumb/2022_27431--cover-59950-vw-inside-jobs-capt-1.png","inside-jobs-27899"],["Tiffany’s Reasons to Smile","Motion design","2023","Playground Paris","Tiffany","T:2023/thumb/2023_28011--cover-81018-film.png","tiffanys-reasons-to-smile-28728"],["THE SUBSTANCE - générique","Motion design","2024","Fugu productions","Working Title - Blacksmith - Mubi - A Good Story","T:2024/thumb/2024_28115--cover-90923-thesubstance-typeface01x1024-copie.png","the-substance-generique-28881"],["Plage","Radio","2015","Les Gaulois","Transavia","C:2015-20770v1.jpg","plage-21424"],["Meetic","Comm. Films & Divertissements","2016","Buzzman","Meetic","C:2016-21160v1.jpg","meetic-22151"],["Her, We Choose","Prod Clip Musical","2017","Fury","Barclay - Romain Chassaing","C:2017-21423v1.png","her-we-choose-25687"],["Paypal","Prod Films","2018","Big Productions","Paypal","C:2018-22069v1.jpg","paypal-26320"],["Rebuild the world affiche","Comm. extérieure & Print","2019","Betc","Lego","T:2019/thumb/2019_26462--cover-22889-01-lego-rtw-4x3-rabbit.jpg","rebuild-the-world-affiche-26476"],["Ne gardez que le meilleur de la France","Image Illustration","2020","Tbwa\\Paris","Le Chocolat Des Français","T:2020/thumb/2020_26808--cover-37055-chocolat-des-francais-bouchons.jpg","ne-gardez-que-le-meilleur-de-la-france-26992"],["Be Dandy","Branding design","2021","Be Dandy","Be Dandy","T:2021/thumb/2021_27256--cover-52899-cda-bedandy2.jpg","be-dandy-27643"],["Celui qui a tout fait tout seul","Comm. Films & Divertissements","2022","STEVE","Ionos By 1&1","T:2022/thumb/2022_27392--cover-57336-ionos-9.png","celui-qui-a-tout-fait-tout-seul-27836"],["Forever Crispy","Prod Films","2023","Havas Paris","Kfc France","T:2023/thumb/2023_27750--cover-72472-capture-decran-2024-02-16-a-160543.png","forever-crispy-2-28344"],["Karma","Prod Clip Musical","2024","LOTUMN","Sir X Isaiah Rashad","T:2024/thumb/2024_28255--cover-89179-youtube-thumbnail-karma.jpg","karma-29087"],["Lueurs d'Espoir","Social & Créateurs","2015","Ff Group","Humanis","C:2015-20808v1.png","lueurs-despoir-21542"],["Trump","Edition","2016","M Le Magazine Du Monde","M Le Magazine Du Monde","C:2016-21024v1.jpg","trump-22017"],["Volvo Group","Evénementiel","2017","Auditoire","Volvo Group","C:2017-21538v1.jpg","volvo-group-25802"],["Viparis","Design graphique","2018","Babel","Viparis","C:2018-22161v1.jpg","viparis-26412"],["Dis Joe?!","Social & Créateurs","2019","Betc","Deejo","T:2019/thumb/2019_26515--cover-24882-dis-joe-cas.png","dis-joe-26565"],["Ecoutez le monde changer","Comm. extérieure & Print","2020","Romance","Europe 1","T:2020/thumb/2020_26882--cover-39768-0eup003-300x435fu-master-quot-trump-e1.jpg","ecoutez-le-monde-changer-2-27103"],["Haters gonna hate","Prod Films","2021","MILES","Adidas","T:2021/thumb/2021_27163--cover-48812-211129-adidas-paris-basketball-master00-00-55-12still057.jpg","haters-gonna-hate-27522"],["Deuxième rêve (Print)","Comm. Craft Rédaction","2022","Ddb Paris","Honda Moto","T:2022/thumb/2022_27424--cover-58106-honda-reve-1.jpg","deuxieme-reve-print-27888"],["NOËL 2023","Motion design","2023","17Mars","France 2","T:2023/thumb/2023_28034--cover-82124-17mars-france2-lutins-05-previs.jpg","noel-2023-28757"],["Devil May Cry","Motion design","2024","Eddy Production","Netflix","T:2024/thumb/2024_28202--cover-86558-stills-1.png","devil-may-cry-29012"],["Rivages","Prod Clip Musical","2015","Les Fils De","Jr Artist","C:2015-20889v1.jpg","rivages-21784"],["Ubisoft Emea - The Division","Craft - Film","2016","Unit Image","Ubisoft Emea - The Division","C:2016-21133v1.jpg","ubisoft-emea-the-division-ubisoft-emea-the-division-22124"],["Red dot","Comm. Films & Divertissements","2017","Ddb Paris","Ubisoft","C:2017-21308v1.jpg","red-dot-25581"],["Netflix/Canal+","Motion design","2018","Brett & Compagnie","Netflix/Canal+","C:2018-21818v1.jpg","netflixcanal-26069"],["Paysages","Image Photo","2019","Tbwa\\Paris","Coopérative U Enseigne","T:2019/thumb/2019_26565--cover-27595-brume.jpg","paysages-26642"],["Vous pouvez le faire","Comm. Craft Rédaction","2020","Marcel","Manomano","T:2020/thumb/2020_26855--cover-38014-logo-manomano.jpg","vous-pouvez-le-faire-27067"],["Désolé Kad","Prod Films","2021","Henry","Canal+","T:2021/thumb/2021_27205--cover-50569-werner-canal-img5.png","desole-kad-27581"],["Josman - AhGars!","Prod Clip Musical","2022","Solab","Josman","T:2022/thumb/2022_27360--cover-56750-capture-decran-2023-01-18-a-150821.png","josman-ahgars-27775"],["Le pouvoir du chat","Comm. Films & Divertissements","2023","Buzzman","Feu Vert","T:2023/thumb/2023_27868--cover-75746-le-pouvoir-du-chat.png","le-pouvoir-du-chat-28535"],["TERRAINS DE JEUX","Comm. Mode & Beauté","2024","Havas Paris","Lvmh","T:2024/thumb/2024_28310--cover-91731-lvmh-lignes-1.jpg","terrains-de-jeux-29166"],["Water for Africa","Evénementiel","2015","Ogilvy","Water For Africa","K:2015-20976v1.png","water-for-africa-water-for-africa-21949"],["Petit Bateau","Comm. extérieure & Print","2016","Betc","Petit Bateau","K:2016-21112v1.jpg","petit-bateau-22104-22104"],["Target of the world","Comm. extérieure & Print","2017","Ddb Paris","Médecins Du Monde","C:2017-21290v1.jpg","target-of-the-world-25563"],["Andros","Comm. Grandes causes","2018","Serviceplan France","Andros","C:2018-21934v1.png","andros-3-26185"],["Womb","Image Photo","2019","modds","Editions Libraryman","T:2019/thumb/2019_26709--cover-33204-boiron-lucile-wombdiapo-01.jpg","womb-26835"],["La mobilité vertueuse","Motion design","2020","June, TwentyFirst","Mon Compte Mobilité","T:2020/thumb/2020_26982--cover-44015-mob-cover-2.png","la-mobilite-vertueuse-27245"],["YSL - ISLANDE","Prod Films Mode","2021","Division","Ysl","T:2021/thumb/2021_27120--cover-47491-saint-laurent-ice.png","ysl-islande-27447"],["Désolé les chats","Prod Films","2022","Henry","Backmarket","T:2022/thumb/2022_27563--cover-62305-8-back-market-the-cats.png","desole-les-chats-2-28071"],["Cair","Branding design","2023","JoosNabhan","Cair","T:2023/thumb/2023_28038--cover-82435-1-cair.jpeg","cair-28761"],["FE!N","Prod Clip Musical","2024","Division","Travis Scott","T:2024/thumb/2024_28072--cover-83872-fein.jpg","fen-28813"],["Mou'v","Radio","2015","Les Gaulois","Mouv’  France Musique","C:2015-20771v1.jpg","mouv-21429"],["Le sport ne s'arrete jamais","Comm. extérieure & Print","2016","Betc","Canal+","K:2016-20998v1.jpg","le-sport-ne-sarrete-jamais-21990"],["Endless debate","Comm. extérieure & Print","2017","Publicis Conseil","Renault","C:2017-21274v1.jpg","endless-debate-25547"],["Dagoma","Innovations","2018","Tbwa\\Paris","Dagoma","C:2018-21990v1.jpg","dagoma-26241-26241"],["Everything Looks Bigger Closer","Prod Clip Musical","2019","Eddy Production","Good Luck Chuck Gbr","T:2019/thumb/2019_26538--cover-24869-xcapture-decran-2020-01-31-a-191737.jpg","everything-looks-bigger-closer-26594"],["BETC in one thousand letters","Image Photo","2020","Betc","Betc","T:2020/thumb/2020_26918--cover-41456-capture-decran-2021-04-16-a-130135.png","betc-in-one-thousand-letters-27158"],["City Riders","Image Photo","2021","Birth","Marie Claire","T:2021/thumb/2021_27260--cover-52998-1ojoz-mc-copie.jpeg","city-riders-27647"],["Astrology Club","Produits digitaux","2022","Makemepulse","Spotify","T:2022/thumb/2022_27684--cover-69234-capture-decran-2023-05-03-a-195134.png","astrology-club-28239"],["GTA","Comm. Films & Divertissements","2023","Betc","Heetch","T:2023/thumb/2023_27985--cover-79513-capture-3.jpg","gta-28691"],["Idents de Noël","Motion design","2024","ARTE GEIE","Arte","T:2024/thumb/2024_28213--cover-87952-arte-visuels-fixes-900x900-rvb.png","idents-de-noel-2-29025"],["Maison Crispi","Branding design","2015","Mathias Schweitwer","Maison Crispi","K:2015-20974v1.png","maison-crispi-21946"],["Canal+ T","Motion design","2016","Canal+ Direction Artistique","Canal+T","C:2016-21093v1.jpg","canalt-22085"],["The Thin Red path","Craft - Film","2017","Ddb Paris - Unit","Ubisoft","C:2017-21681v1.jpg","the-thin-red-path-25937"],["Mad","Comm. extérieure & Print","2018","Betc","Mad","C:2018-21809v1.jpg","mad-3-26060"],["Biiip","Comm. Films & Divertissements","2019","Betc","Canal+","T:2019/thumb/2019_26533--cover-27696-c-biiip-key-visual.jpg","biiip-26586"],["L'art du silence","Comm. Craft Rédaction","2020","Romance","Audi","T:2020/thumb/2020_26881--cover-40567-generic-cover-l-art-du-silence.jpg","lart-du-silence-27102"],["Face au sida","Comm. Grandes causes","2021","STRIKE","Aides","T:2021/thumb/2021_27235--cover-52106-em-fd.jpg","face-au-sida-27618"],["Review Hacking","Social & Créateurs","2022","Ddb Paris","Skoda","T:2022/thumb/2022_27435--cover-62736-capture-decran-2023-04-06-a-095315.png","review-hacking-27904"],["Exit","Prod Films","2023","Hamlet","Oneplus","T:2023/thumb/2023_27955--cover-78320-oneplus-dc-still-0011-calque-1.jpg","exit-28646"],["AGORESPACE","Produits digitaux","2024","LEOLEO Studio","Agorespace","T:2024/thumb/2024_28390--cover-97182-capture-decran-2025-06-15-a-144302.png","agorespace-29262"],["Naissance","Comm. extérieure & Print","2015","Betc","Evian","K:2015-20725v1.jpg","naissance-21291"],["Indépendance","Comm. extérieure & Print","2016","Betc","La Croix","K:2016-21068v1.png","independance-2-22061"],["Halloween","Craft - Film","2017","Tbwa\\Paris - Nicolas Galoux","Burns And Smiles","C:2017-21667v1.jpg","halloween-3-25922"],["Ubisoft -Starlink","Comm. Films & Divertissements","2018","Clm Bbdo","Ubisoft -Starlink","C:2018-21900v1.jpg","ubisoft-starlink-26151"],["Oh my dog","Comm. Grandes causes","2019","Havas Paris","Fédération Française De Cardiologie","T:2019/thumb/2019_26582--cover-27375-cda-dog-previsualisation.jpg","oh-my-dog-26662"],["Violence policière","Comm. Grandes causes","2020","Ddb Paris","Amnesty International","T:2020/thumb/2020_26794--cover-36610-amnesty-violence-policiere-1.jpg","violence-policiere-26964"],["Lisa Zimouche Playground by Courtside","Comm. extérieure & Print","2021","Courtside","Ea Sports","T:2021/thumb/2021_27318--cover-55656-capture-decran-2022-05-17-a-225901.png","lisa-zimouche-playground-by-courtside-27708"],["Le 8 Hypnôse","Branding design","2022","Servaire & Co","Lancôme","T:2022/thumb/2022_27483--cover-61122-closeup-1.jpg","le-8-hypnose-27968"],["Un1que","Comm. extérieure & Print","2023","Betc","Canal+","T:2023/thumb/2023_27920--cover-76482-wemby-dooh-trio-16x9-01.jpg","un1que-28603"],["L'anniversaire de trop","Prod Films","2024","HIERSOIR","Valentin Haüy","T:2024/thumb/2024_28105--cover-84329-img-vh.jpeg","lanniversaire-de-trop-28865"],["L'Ame de la Table","Craft - Film","2015","Ddb Paris","Maille","C:2015-20852v1.png","lame-de-la-table-21672"],["Pronto Cafe","Comm. extérieure & Print","2016","Y&R Paris","Pronto Cafe","K:2016-21074v1.jpg","pronto-cafe-22066"],["Petit Bateau","Comm. Films & Divertissements","2017","Betc","Petit Bateau","C:2017-21316v1.png","petit-bateau-25589"],["Sig","Comm. Grandes causes","2018","Betc","Sig","C:2018-21926v1.jpg","sig-26178"],["1 jour, 1 dessin","Image Illustration","2019","PEKELO","Arte Tv","T:2019/thumb/2019_26761--cover-36256-video-recaphebdo1.png","1-jour-1-dessin-26894"],["Adidas Basics X Pharell Williams","Image Photo","2020","Talent And Partner","Adidas","T:2020/thumb/2020_26987--cover-44365-scheltens-abbenes-adidas-basics-pw-stack-hoodie-2020-09-190x2000.jpg","adidas-basics-x-pharell-williams-27252"],["Le Bal des Folles","Design graphique","2021","Gedeon","Prime Video","T:2021/thumb/2021_27068--cover-46691-gedeon-bdf-dossier-de-presse-1.jpg","le-bal-des-folles-27364"],["En Corps","Motion design","2022","Drosofilms","Ce Qui Me Meut","T:2022/thumb/2022_27683--cover-69305-capture-decran-2023-05-10-a-203246.png","en-corps-28238"],["LEANING INTO YOUR PALMS","Prod Clip Musical","2023","Solab","Austyn Gillette","T:2023/thumb/2023_27782--cover-71270-leaning-into-your-palms-austyn-gillette.png","leaning-into-your-palms-28393"],["Une saison au Frac Bretagne","Design graphique","2024","Devalence","Frac Bretagne","T:2024/thumb/2024_28351--cover-95037-01-devalence-fracbretagne-alicherri-2.jpg","une-saison-au-frac-bretagne-29210"],["Les Hamster","Comm. Films & Divertissements","2015","Havas Paris","Juva Santé","C:2015-20913v1.jpg","les-hamster-21829"],["Smart forfour","Comm. extérieure & Print","2016","Bbdo - Clm Bbdo","Smart Forfour","C:2016-21063v1.jpg","smart-forfour-22057"],["Acadomia","Comm. Films & Divertissements","2017","Humanseven","Acadomia","C:2017-21326v1.jpg","acadomia-2-25599"],["Monoprix","Comm. Films & Divertissements","2018","Rosapark","Monoprix","C:2018-21897v1.jpg","monoprix-26148-26147"],["Comme si by Doan Ly","Image Photo","2019","37.2","Comme Si","T:2019/thumb/2019_26656--cover-30515-comme-si1602.jpg","comme-si-by-doan-ly-26771"],["Co2ncious (Innovation)","Innovations","2020","Betc","Backmarket","T:2020/thumb/2020_26958--cover-42445-back-market-co2nciouskv.jpg","co2ncious-innovation-27210"],["C'est Clair","Prod Films","2021","Wanda Productions","Cultura","T:2021/thumb/2021_27190--cover-49793-6.png","cest-clair-27558"],["La déforestation n'est pas une fiction","Comm. Grandes causes","2022","STRIKE","Greenpeace","T:2022/thumb/2022_27377--cover-57027-greenpeace-deforestation-is-not-a-fiction-0.jpg","la-deforestation-nest-pas-une-fiction-27806"],["COKE CREATIONS x ROSALIA","Prod Films","2023","Division","Coca-Cola","T:2023/thumb/2023_27734--cover-70442-rosalia-coke-creations.png","coke-creations-x-rosalia-28317"],["Cash App Brand Guidelines","Produits digitaux","2024","Index Studio","Cash App","T:2024/thumb/2024_28386--cover-97106-capture-decran-2025-06-15-a-144856.png","cash-app-brand-guidelines-29258"],["La charge","Craft - Film","2015","Rods Films","Canalsat","C:2015-20886v1.png","la-charge-21775"],["Beach ! Beach ! Beach ! ","Prod Clip Musical","2016","Benoit Musereau","Boscorogers","C:2016-21106v1.jpg","beach-beach-beach-22098"],["Fondation Cartier pour l'art Contemporain","Edition","2017","Club Des Directeurs Artistiques","Fondation Cartier Pour L’art Contemporain","C:2017-21749v1.jpg","fondation-cartier-pour-lart-contemporain-26005"],["Coty (Miu Miu)","Prod Films","2018","Iconoclast","Coty (Miu Miu)","C:2018-22057v1.jpg","coty-miu-miu-26308"],["Bucket Bangers","Comm. Direct Activation","2019","Sid Lee Paris","Kfc","T:2019/thumb/2019_26588--cover-27640-plan-de-travail-1-copie-4.jpeg","bucket-bangers-26674"],["La vie - Print","Comm. extérieure & Print","2020","Ddb Paris","Délégation À La Sécurité Routière","T:2020/thumb/2020_26802--cover-36716-dsr-vivre-ensemble-01.jpg","la-vie-print-26976"],["Albatros","Image Photo","2021","Fma Lebureau","Louis Vuitton","T:2021/thumb/2021_27228--cover-51645-lv-rh-1a.png","albatros-27611"],["NIKE NEVER SETTLE NEVER DONE","Prod Films","2022","Division","Nike","T:2022/thumb/2022_27338--cover-56400-nike-never-settle-never-done.png","nike-never-settle-never-done-27737"],["Decathlon JO 2024","Comm. Craft Image","2023","Eddy","Decathlon","T:2023/thumb/2023_27897--cover-75481-decathstory30.png","decathlon-jo-2024-28570"],["Homerun","Produits digitaux","2024","LEOLEO Studio","Homerun","T:2024/thumb/2024_28387--cover-97108-capture-decran-2025-06-15-a-150948.png","homerun-29259"],["Mac Val","Branding design","2015","Spassky Fischer","Mac Val","K:2015-20967v1.jpg","mac-val-21937"],["Axe","Comm. Films & Divertissements","2016","Insurrection Paris","Axe","C:2016-21159v1.jpg","axe-22151-22152"],["Charleroi danse","Edition","2017","Gr20Paris","Charleroi Danse","C:2017-21761v1.jpg","charleroi-danse-26017"],["Ichon","Prod Clip Musical","2018","Frenzy Paris","Ichon","C:2018-22017v1.jpg","ichon-26268"],["Fashion Eye","Design graphique","2019","Louis Vuitton","Editions Louis Vuitton","T:2019/thumb/2019_26712--cover-33457-lv-fashion-eye-dp2019-fr-bd-page-02.jpg","fashion-eye-26840"],["Ami","Comm. Craft Rédaction","2020","Buzzman","Citroën","T:2020/thumb/2020_26957--cover-42411-citroen-visuel-1.jpg","ami-27209"],["LE MONDE DIPLOMATIQUE","Prod Films Mode","2021","Phantasm","Casablanca","T:2021/thumb/2021_27226--cover-51549-1.jpg","le-monde-diplomatique-27608"],["SOS Migrants","Comm. Grandes causes","2022","Tbwa\\Paris","France Terre D’asile Et Watizat","T:2022/thumb/2022_27529--cover-60744-migrants-2.png","sos-migrants-28023"],["MUGLER SHOW SS24","Comm. Mode & Beauté","2023","Division","Mugler","T:2023/thumb/2023_27740--cover-70505-mugler-ss24-show-00.png","mugler-show-ss24-28330"],["L'attente","Comm. Grandes causes","2024","ROSA PARIS","Fondation Pour Le Logement","T:2024/thumb/2024_28307--cover-91720-lattente.png","lattente-29159"],["Théorie - Kenneth Goldsmith","Edition","2015","Jean-Boites Editions","Jean-Boites Editions","K:2015-20948v1.jpg","theorie-kenneth-goldsmith-21900"],["Canal X","Comm. Films & Divertissements","2016","Betc","Canal +","C:2016-21165v1.jpg","canal-x-22157"],["Navya","Evénementiel","2017","Tetro","Navya","C:2017-21534v1.jpg","navya-25798"],["Printemps Haussmann","Image Illustration","2018","Talkie Walkie","Printemps Haussmann","C:2018-21953v1.jpg","printemps-haussmann-26204"],["New Office : The ads 31.03.2019 - 31.03.2020 de Florence Jung","Design graphique","2019","JBE Books","Jbe Books","T:2019/thumb/2019_26720--cover-34433-florence-jung-new-office-book-cover-mockup-blanc.jpg","new-office-the-ads-31032019-31032020-de-florence-jung-26850"],["Emergency Bikes","Innovations","2020","Wunderman Thompson Paris","Ecox","T:2020/thumb/2020_26827--cover-37236-minieb1.jpg","emergency-bikes-27028"]];
+
+const PREFIX = {
+  T: 'https://membres.leclubdesda.org/img/images/archive/',
+  C: 'https://membres.leclubdesda.org/img/images/archive-cover/',
+  K: 'https://membres.leclubdesda.org/img/images/archive-child/',
+  O: 'http://old.leclubdesda.org/files/archive/thumbs/'
+};
+
+const RAWVIMS = [["asap-rocky-tailor-swif-vania-muggia-28976","1068912375"],["vieillir-ca-peut-faire-peur-28801","1053294813"],["les-lettres-de-krakovie-29228","1081819541"],["habillage-de-noel-29030","1069527501"],["40-ans-2-28937","1068300972"],["bellissimo-28810","1060216574"],["les-portes-2-28980","1068286035"],["we-also-do-motorcycles-28854","1072474427"],["the-amateur-jersey-28930","1076745251"],["members-experience-29069","1070329906"],["the-final-copy-of-ilon-specht-29271","1095880605"],["olympic-curry-28779","1072473161"],["new-balance-shohei-ohtani-28847","1066605028"],["un-smartphone-pour-noel-28876","1065549249"],["look-of-the-games-29219","1081531673"],["le-maillot-des-reves-29056","1070096261"],["generator-28662","936594861"],["edf-x-gims-28555","917106408"],["come-and-celebrate-together-projet-fictif-28501","914833962"],["gare-du-nord-28427","933226578"],["love-me-tender-28276","900866197"],["free-nationals-gangsta-28514","915929607"],["gesaffelstein-gamma-28517","915926132"],["la-motrice-liberee-28683","930701733"],["une-histoire-vraie-vladimir-de-fontenay-28408","936243942"],["decoder-les-femmes-28545","917076214"],["greetings-from-la-banlieue-28444","919513561"],["la-vie-chere-3-28639","922043195"],["rose-fluo-28407","912257308"],["hippocrate-2023-28616","921481430"],["hayward-magic-27532","682773228"],["lappel-2-27574","684619347"],["aap-ferg-green-juice-ft-pharrell-williams-27353","672843068"],["le-bon-pote-27619","694345483"],["graciela-iturbide-heliotropo-37-27697","708536678"],["festival-documentaire-27674","704450786"],["avec-plaisir-27426","677629192"],["balenciaga-the-lost-tape-27433","683881174"],["elden-ring-story-trailer-27570","684340403"],["keep-on-fallin-27583","685862344"],["merciles2010-27525","681455988"],["fierement-normal-27338","688481054"],["teddy-riner-27526","686241825"],["ariane-odyssey-27628","695754093"],["statistiques-26582","392004180"],["true-colors-26551","392185491"],["spoiler-codes-26503","389245496"],["echos-26439","392465404"],["green-dawn-26490","388203145"],["big-bad-wolves-26497","389194131"],["the-cemetery-rainbow-six-siege-26556","391436443"],["vw-stories-illu-26690","394903960"],["kekra-putain-de-salaire-26715","395994882"],["epiphany-21588","472573509"],["site-de-lopera-national-de-paris-et-la-3e-scene-21732","472573991"],["opera-national-de-paris-3e-scene-la-grande-sortie-21801","472574149"],["popcorn-garage-21355","472572897"],["dashboard-21446","472573078"],["le-musee-des-plages-21782","472574092"],["georges-21864","472576264"],["mieux-informes-18101","472560322"],["dj-mehdi-18178","472560556"],["magiczaozacom-17890","472560176"],["sidaction-ensemble-contre-le-sida-16623","472554220"],["le-monde-14911-14911","472547736"],["le-nouvel-observateur-14922","472548868"],["les-petits-freres-des-pauvres-14989-14989","472547925"],["maaf-assurances-15032","472548024"],["mars-14968","472547895"],["mc-cain-15016-15016","472547995"],["mc-donalds-15125-15123","472548217"],["3-suisses-catalogue-13544","472543940"],["arthur-martin-13477","472543887"],["quenelles-petitjean-11178","472537697"],["schneider-11162-11162","472537667"],["soupline-11163","472537663"],["fromage-9807-9807","472530031"],["fido-7066-7063","472522992"],["findus-7069","472522993"],["the-realest-ad-29048","1070279330"],["retrouvons-notre-fraternite-28923","1069970865"],["la-campagne-la-plus-solidaire-29009","1073332887"],["conduisez-comme-une-femme-28878","1070983763"],["pas-a-vendre-28928","1072166786"],["les-centenaires-28951","1087672167"],["batarddonneur-28353","918278215"],["born-in-1853-made-for-the-future-28588","918280614"],["reaverse-27886","802023032"],["design-global-aema-groupe-27646","703306637"],["aninvitationtopiquia-27202","538608389"],["ffc-federation-francaise-de-cardiologie-25587","250870177"],["little-big-change-26150","319860005"],["fake-4-good-26512","388205904"],["les-cesars-hollywood-institute-27870","798807322"],["horse-28725","930666615"],["art-unlocked-the-very-illegal-exhibition-29131","1071200769"],["sorry-21820","472574170"],["la-vie-film-26969","518662182"],["engie-no-energy-to-waste-27370","682183042"],["soyez-lhomme-que-vous-voulez-etre-28202","815279218"],["130-ans-illustrations-patrimoine-28904","1075255726"],["oui-mais-non-lentretien-21765","472574058"],["agence-de-la-biomedecine-22143","472578455"],["wwf-26190-26190","324254306"],["post-racism-26561","389255132"],["co2ncious-digital-27205","538630163"],["changer-nous-fait-avancer-27580","685537298"],["inside-jobs-27899","799421475"],["tiffanys-reasons-to-smile-28728","930633603"],["the-substance-generique-28881","1071520200"],["meetic-22151","472578480"],["her-we-choose-25687","250960708"],["paypal-26320","316839170"],["rebuild-the-world-affiche-26476","387993046"],["be-dandy-27643","699477416"],["celui-qui-a-tout-fait-tout-seul-27836","797414094"],["forever-crispy-2-28344","913777643"],["karma-29087","1070443015"],["lueurs-despoir-21542","472573364"],["volvo-group-25802","254900134"],["dis-joe-26565","389928896"],["haters-gonna-hate-27522","681299217"],["noel-2023-28757","937943755"],["devil-may-cry-29012","1069203486"],["rivages-21784","472574095"],["ubisoft-emea-the-division-ubisoft-emea-the-division-22124","472578377"],["red-dot-25581","250590675"],["netflixcanal-26069","326545573"],["desole-kad-27581","685572146"],["josman-ahgars-27775","790806998"],["le-pouvoir-du-chat-28535","917979379"],["andros-3-26185","319863222"],["la-mobilite-vertueuse-27245","552231217"],["ysl-islande-27447","678851802"],["desole-les-chats-2-28071","805598877"],["cair-28761","941954785"],["fen-28813","1060227859"],["dagoma-26241-26241","320804095"],["everything-looks-bigger-closer-26594","392250602"],["betc-in-one-thousand-letters-27158","533466615"],["gta-28691","926341784"],["idents-de-noel-2-29025","1069972341"],["canalt-22085","472578179"],["the-thin-red-path-25937","250592720"],["biiip-26586","393959530"],["lart-du-silence-27102","534104456"],["face-au-sida-27618","693010120"],["review-hacking-27904","806665334"],["exit-28646","922417037"],["halloween-3-25922","250617006"],["ubisoft-starlink-26151","317296309"],["oh-my-dog-26662","393645372"],["lisa-zimouche-playground-by-courtside-27708","710965380"],["le-8-hypnose-27968","810692692"],["lanniversaire-de-trop-28865","1063537074"],["lame-de-la-table-21672","472573821"],["petit-bateau-25589","250267727"],["sig-26178","321259065"],["1-jour-1-dessin-26894","432806589"],["adidas-basics-x-pharell-williams-27252","554772892"],["en-corps-28238","825577572"],["leaning-into-your-palms-28393","911562234"],["les-hamster-21829","472574202"],["acadomia-2-25599","250841526"],["monoprix-26148-26147","321754596"],["co2ncious-innovation-27210","541563209"],["cest-clair-27558","683894193"],["la-deforestation-nest-pas-une-fiction-27806","793099034"],["coke-creations-x-rosalia-28317","906766095"],["la-charge-21775","472574080"],["beach-beach-beach-22098","472578256"],["coty-miu-miu-26308","317302617"],["bucket-bangers-26674","393926012"],["nike-never-settle-never-done-27737","780407129"],["decathlon-jo-2024-28570","917706731"],["axe-22151-22152","472578502"],["ichon-26268","324294251"],["le-monde-diplomatique-27608","689393218"],["sos-migrants-28023","803461630"],["mugler-show-ss24-28330","906813694"],["lattente-29159","1073130223"],["canal-x-22157","472578526"],["navya-25798","250450786"],["emergency-bikes-27028","520692294"]];
+const VIDS = new Map(RAWVIMS);
+
+const APREFIX = 'https://membres.leclubdesda.org/storage/files/files/';
+const RAWAUDS = [["killer-social-club-saison-1-27626","archive/2021/2021_27241--mix-ksc-ep-01mp3.mp3"],["best-story-ever-27524","archive/2021/2021_27164--best-story-ever-s02e01-humains-contre-emeusmp3.mp3"],["green-dawn-26490","archive/2019/2019_26472--green-dawn1wind-castlemp3.mp3"],["seafrance-16758","imported/2003-381v1.mp3"],["vag-polo-3-13609","imported/1993-378v1.mp3"],["afls-13777","imported/1993-434v1.mp3"],["plage-21424","imported/2015-20770v1.mp3"],["vous-pouvez-le-faire-27067","archive/2020/2020_26855--manomano-piscinemp3.mp3"],["lart-du-silence-27102","archive/2020/2020_26881--ep01-cinema-mix-l-art-du-silencemp3.mp3"],["bucket-bangers-26674","archive/2019/2019_26588--mash-up-bucket-bangersmp3.mp3"]];
+const AUDS = new Map(RAWAUDS);
+
+const HIRES = '?fm=jpg&q=85&w=1400&fit=max';
+const THUMB = '?fm=jpg&q=70&w=300&fit=max';
+const PH_THUMB = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="120" height="90"><rect width="120" height="90" fill="#FF4A11"/><text x="60" y="58" font-size="36" text-anchor="middle" fill="#fff">♪</text></svg>');
+
+const EXCLUDED = ['concours etudiant', 'typographie', 'design d espaces', 'concours futurs desirables', 'prod son', 'prod vfx & animation'];
+const catNorm = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[’']/g,' ');
+const CAMPAIGNS = RAW.filter(r => (r[5][0] !== 'O' || AUDS.has(r[6])) && !EXCLUDED.includes(catNorm(r[1]))).map(r => {
+  const [title, cat, year, agency, client, img, slug] = r;
+  const yr = year.split('-').map(Number);
+  const base = img[0] === 'O' ? null : PREFIX[img[0]] + img.slice(2);
+  const v = VIDS.get(slug);
+  return {
+    title, cat, agency, client, slug,
+    yearLabel: year,
+    yMin: yr[0], yMax: yr.length > 1 ? yr[1] : yr[0],
+    imgBase: base,
+    img: base ? base + HIRES : null,
+    thumb: base ? base + THUMB : PH_THUMB,
+    video: v || null,
+    audio: AUDS.has(slug) ? APREFIX + AUDS.get(slug) : null
+  };
+});
+
+const AGENCIES = [...new Set(CAMPAIGNS.map(c => c.agency))].sort((a,b)=>a.localeCompare(b,'fr'));
+const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')
+  .replace(/[^a-z0-9]+/g,' ').trim();
+
+// ---------- Game state ----------
+const ROUNDS = 5;
+let pool = [], order = [], round = 0, score = 0, results = [];
+
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+const $ = id => document.getElementById(id);
+const img = $('campaignImg');
+const vidWrap = $('vidWrap');
+const audioEl = $('audioEl');
+
+const SEEN_KEY = 'clubdesda_guessr_seen';
+function markSeen(slug){
+  try {
+    const seen = (JSON.parse(localStorage.getItem(SEEN_KEY)) || []).filter(s => s !== slug);
+    seen.push(slug);
+    localStorage.setItem(SEEN_KEY, JSON.stringify(seen.slice(-200)));
+  } catch(e){}
+}
+
+function newGame(){
+  // vrai hasard sur tout le corpus, ~75% de campagnes post-2000,
+  // en écartant les ~200 dernières campagnes déjà vues (mémorisées dans le navigateur)
+  let seen = [];
+  try { seen = JSON.parse(localStorage.getItem(SEEN_KEY)) || []; } catch(e){}
+  const seenSet = new Set(seen);
+  const fresh = CAMPAIGNS.filter(c => !seenSet.has(c.slug));
+  const base = fresh.length >= 40 ? fresh : CAMPAIGNS;
+  pool = {
+    recent: shuffle(base.filter(c => c.yMin >= 2000)),
+    old: shuffle(base.filter(c => c.yMin < 2000))
+  };
+  order = []; round = 0; score = 0; results = [];
+  $('endScreen').classList.remove('show');
+  $('stage').style.display = 'block';
+  $('hudScore').textContent = '0';
+  nextRound();
+}
+
+function pickCampaign(cb){
+  // 75% de chances de piocher dans le récent (2000+), sinon dans l'ancien
+  const arr = (Math.random() < 0.75 && pool.recent.length) ? pool.recent
+            : (pool.old.length ? pool.old : pool.recent);
+  if (!arr.length) { cb(null); return; }
+  const c = arr.pop();
+  markSeen(c.slug);
+  if (!c.imgBase) { c.imgOk = false; cb(c); return; } // audio sans visuel
+  const test = new Image();
+  let done = false;
+  const finish = ok => {
+    if (done) return; done = true;
+    if (ok) { c.imgOk = true; cb(c); }
+    else if (c.audio || c.video) { c.imgOk = false; cb(c); }
+    else pickCampaign(cb);
+  };
+  test.onload = () => finish(true);
+  test.onerror = () => finish(false);
+  setTimeout(() => finish(false), 7000);
+  test.src = c.img;
+}
+
+let current = null;
+
+function nextRound(){
+  round++;
+  if (round > ROUNDS) { endGame(); return; }
+  $('hudRound').textContent = round;
+  $('guessPanel').style.display = 'block';
+  $('revealPanel').classList.remove('show');
+  $('agencyInput').value = '';
+  $('yearSlider').value = 1996;
+  $('yearVal').textContent = '1996';
+  img.style.display = 'none';
+  vidWrap.innerHTML = ''; vidWrap.style.display = 'none';
+  audioEl.pause(); audioEl.removeAttribute('src');
+  $('audioBar').style.display = 'none';
+  $('audioPh').style.display = 'none';
+  $('mediaTag').style.display = 'none';
+  $('catHint').textContent = '…';
+  $('imgLoading').style.display = 'block';
+  pickCampaign(c => {
+    if (!c) { endGame(); return; }
+    current = c;
+    $('catHint').textContent = c.cat;
+    if (c.video) {
+      $('imgLoading').style.display = 'none';
+      const f = document.createElement('iframe');
+      f.src = 'https://player.vimeo.com/video/' + c.video + '?title=0&byline=0&portrait=0&dnt=1';
+      f.allow = 'fullscreen; picture-in-picture; encrypted-media';
+      f.allowFullscreen = true;
+      vidWrap.appendChild(f);
+      vidWrap.style.display = 'block';
+      $('mediaTag').textContent = 'Film';
+      $('mediaTag').style.display = 'block';
+      return;
+    }
+    if (c.audio) {
+      audioEl.src = c.audio;
+      $('audioBar').style.display = 'block';
+      $('mediaTag').textContent = 'Audio';
+      $('mediaTag').style.display = 'block';
+    }
+    if (c.imgOk !== false && c.img) {
+      img.src = c.img;
+      img.onload = () => { $('imgLoading').style.display='none'; img.style.display='block'; };
+    } else {
+      $('imgLoading').style.display = 'none';
+      $('audioPh').style.display = 'flex';
+    }
+  });
+}
+
+// ---------- Scoring ----------
+function scoreYear(guess, c){
+  let diff = 0;
+  if (guess < c.yMin) diff = c.yMin - guess;
+  else if (guess > c.yMax) diff = guess - c.yMax;
+  return Math.round(4000 * Math.exp(-(diff*diff)/(2*10*10)));
+}
+function scoreAgency(guess, c){
+  const g = norm(guess), a = norm(c.agency);
+  if (!g) return 0;
+  if (g === a) return 1000;
+  if (a.includes(g) || g.includes(a)) return (Math.min(g.length,a.length) >= 3) ? 600 : 0;
+  return 0;
+}
+
+function submitGuess(){
+  const yGuess = parseInt($('yearSlider').value, 10);
+  const aGuess = $('agencyInput').value;
+  const yPts = scoreYear(yGuess, current);
+  const aPts = scoreAgency(aGuess, current);
+  const pts = yPts + aPts;
+  score += pts;
+  results.push({ c: current, yGuess, aGuess, yPts, aPts, pts });
+  $('hudScore').textContent = score.toLocaleString('fr-FR');
+
+  $('stampPts').textContent = pts.toLocaleString('fr-FR');
+  $('stamp').classList.toggle('hot', pts >= 4000);
+  $('rTitle').textContent = current.title;
+  $('rCat').textContent = current.cat;
+  $('bAgency').textContent = current.agency;
+  $('bClient').textContent = current.client || '—';
+  const yEl = $('rYear');
+  yEl.textContent = current.yearLabel + ' — votre réponse : ' + yGuess + ' (+' + yPts.toLocaleString('fr-FR') + ' pts)';
+  yEl.className = 'v ' + (yPts >= 3000 ? 'ok' : (yPts <= 500 ? 'ko' : ''));
+  const aEl = $('rAgencyFact');
+  aEl.textContent = aGuess ? ('votre réponse : ' + aGuess + ' (+' + aPts + ' pts)') : 'pas de réponse (+0 pt)';
+  aEl.className = 'v ' + (aPts >= 600 ? 'ok' : 'ko');
+  $('rLink').href = 'https://leclubdesda.org/archive/' + current.slug;
+
+  $('guessPanel').style.display = 'none';
+  $('revealPanel').classList.add('show');
+  $('nextBtn').textContent = round === ROUNDS ? 'Voir le score final' : 'Manche suivante';
+}
+
+// ---------- Hall of Fame (stocké dans ce navigateur) ----------
+const HOF_KEY = 'clubdesda_guessr_hof';
+const NAME_KEY = 'clubdesda_guessr_name';
+let finalVal = 0;
+function loadHof(){ try { return JSON.parse(localStorage.getItem(HOF_KEY)) || []; } catch(e){ return []; } }
+function renderHof(hlIdx){
+  const ol = $('hofList');
+  ol.innerHTML = '';
+  loadHof().slice(0, 10).forEach((e, i) => {
+    const li = document.createElement('li');
+    if (hlIdx !== undefined && i === hlIdx) li.className = 'me';
+    li.innerHTML = '<span><span class="rank">' + (i+1) + '.</span>' + esc(e.n) + '</span><span class="sc">' + e.s.toLocaleString('fr-FR') + '</span>';
+    ol.appendChild(li);
+  });
+}
+$('hofSave').addEventListener('click', () => {
+  const n = $('hofName').value.trim();
+  if (!n) { $('hofName').focus(); return; }
+  const list = loadHof();
+  const entry = { n, s: finalVal, d: Date.now() };
+  list.push(entry);
+  list.sort((a, b) => b.s - a.s || a.d - b.d);
+  try {
+    localStorage.setItem(HOF_KEY, JSON.stringify(list.slice(0, 50)));
+    localStorage.setItem(NAME_KEY, n);
+  } catch(e){}
+  $('hofForm').style.display = 'none';
+  renderHof(list.indexOf(entry));
+});
+$('hofName').addEventListener('keydown', e => { if (e.key === 'Enter') $('hofSave').click(); });
+
+function endGame(){
+  vidWrap.innerHTML = '';
+  audioEl.pause();
+  finalVal = score;
+  $('hofForm').style.display = 'flex';
+  try { $('hofName').value = localStorage.getItem(NAME_KEY) || ''; } catch(e){}
+  renderHof();
+  $('stage').style.display = 'none';
+  const end = $('endScreen');
+  end.classList.add('show');
+  $('finalScore').textContent = score.toLocaleString('fr-FR');
+  const pct = score / 25000;
+  $('verdict').textContent =
+    pct > .85 ? '« On te voit au prochain jury du Club. »' :
+    pct > .65 ? '« Solide culture pub. Directeur·rice artistique dans l\'âme. »' :
+    pct > .25 ? '« Stagiaire première année. Ça viendra. »' :
+    '« Tu regardais les pubs ou tu zappais ? »';
+  const recap = $('recap');
+  recap.innerHTML = '';
+  results.forEach((r,i) => {
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML = '<img loading="lazy">' +
+      '<div class="t">' + esc(r.c.title) + '<small>' + esc(r.c.agency) + ' · ' + r.c.yearLabel +
+      ' — votre réponse : ' + r.yGuess + (r.aGuess ? ' / ' + esc(r.aGuess) : '') + '</small></div>' +
+      '<div class="pts">' + r.pts.toLocaleString('fr-FR') + '</div>';
+    row.querySelector('img').src = r.c.thumb;
+    recap.appendChild(row);
+  });
+}
+
+function esc(s){ const d=document.createElement('span'); d.textContent=s; return d.innerHTML; }
+
+// ---------- Lightbox ----------
+const lb = $('lightbox'), lbImg = $('lbImg');
+img.addEventListener('click', () => {
+  if (!current) return;
+  lbImg.src = current.imgBase + '?fm=jpg&q=90&w=2200&fit=max';
+  lbImg.classList.remove('zoomed');
+  lb.classList.add('show');
+});
+function lbOrigin(e){
+  lbImg.style.transformOrigin = (e.offsetX / lbImg.offsetWidth * 100) + '% ' + (e.offsetY / lbImg.offsetHeight * 100) + '%';
+}
+lbImg.addEventListener('click', e => {
+  e.stopPropagation();
+  lbOrigin(e);
+  lbImg.classList.toggle('zoomed');
+});
+lbImg.addEventListener('mousemove', e => { if (lbImg.classList.contains('zoomed')) lbOrigin(e); });
+lb.addEventListener('click', e => { if (e.target === lb) lb.classList.remove('show'); });
+$('lbClose').addEventListener('click', () => lb.classList.remove('show'));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') lb.classList.remove('show'); });
+
+// ---------- UI wiring ----------
+$('yearSlider').addEventListener('input', e => $('yearVal').textContent = e.target.value);
+$('guessBtn').addEventListener('click', submitGuess);
+$('nextBtn').addEventListener('click', nextRound);
+$('replayBtn').addEventListener('click', newGame);
+
+// Autocomplete
+const input = $('agencyInput'), sugg = $('suggestions');
+let selIdx = -1;
+function showSuggestions(){
+  const q = norm(input.value);
+  sugg.innerHTML = ''; selIdx = -1;
+  if (!q) { sugg.style.display = 'none'; return; }
+  const matches = AGENCIES.filter(a => norm(a).includes(q)).slice(0, 8);
+  if (!matches.length) { sugg.style.display = 'none'; return; }
+  matches.forEach(a => {
+    const d = document.createElement('div');
+    d.textContent = a;
+    d.addEventListener('mousedown', ev => { ev.preventDefault(); input.value = a; sugg.style.display='none'; });
+    sugg.appendChild(d);
+  });
+  sugg.style.display = 'block';
+}
+input.addEventListener('input', showSuggestions);
+input.addEventListener('blur', () => setTimeout(()=> sugg.style.display='none', 120));
+input.addEventListener('keydown', e => {
+  const items = [...sugg.children];
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (!items.length) return;
+    selIdx = e.key === 'ArrowDown' ? Math.min(selIdx+1, items.length-1) : Math.max(selIdx-1, 0);
+    items.forEach((it,i)=> it.classList.toggle('sel', i===selIdx));
+  } else if (e.key === 'Enter') {
+    if (selIdx >= 0 && items[selIdx]) { input.value = items[selIdx].textContent; sugg.style.display='none'; selIdx=-1; }
+    else if (sugg.style.display !== 'block' || !items.length) submitGuess();
+    else { sugg.style.display='none'; }
+  } else if (e.key === 'Escape') { sugg.style.display='none'; }
+});
+
+newGame();
+</script>
+</body>
+</html>
