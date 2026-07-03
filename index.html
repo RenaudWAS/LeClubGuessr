@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Les archives du Club</title>
+<title>Les Archives du Club</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wdth,wght@125,900&display=swap" rel="stylesheet">
 <style>
   :root {
     --orange: #FF4A11;
@@ -26,10 +29,13 @@
     padding: 26px 40px;
   }
   .logo { display: flex; align-items: center; gap: 12px; }
-  .logotext {
-    font-weight: 800; font-size: 14px; line-height: 1.05;
-    letter-spacing: 1.5px; text-transform: uppercase;
+  /* typo display façon logo du Club des D.A. (extended, géométrique) */
+  .display-font {
+    font-family: 'Anybody', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-weight: 900; font-stretch: 125%;
+    text-transform: uppercase; letter-spacing: 0;
   }
+  .logotext { font-size: 13px; line-height: 1.1; }
   .lg-o { color: var(--orange); }
   .hud { display: flex; gap: 12px; align-items: center; }
   .pill {
@@ -39,7 +45,6 @@
   }
   .pill b { font-weight: 800; }
   main { max-width: 1240px; margin: 0 auto; padding: 30px 40px 80px; }
-  @media (max-width: 700px) { header, main { padding-left: 18px; padding-right: 18px; } }
 
   .catline { margin-bottom: 18px; }
   .cat { color: var(--orange); font-weight: 700; font-size: 20px; letter-spacing: -0.2px; display: block; }
@@ -216,8 +221,8 @@
   }
   .home.hidden { display: none; }
   .home-logo {
-    font-weight: 800; font-size: clamp(44px, 7vw, 84px); line-height: 0.95;
-    letter-spacing: -0.035em; text-transform: uppercase; margin-bottom: 26px;
+    font-size: clamp(34px, 6vw, 72px); line-height: 1.02;
+    margin-bottom: 26px;
   }
   .home-sub { max-width: 500px; margin: 0 auto 42px; font-size: 17px; font-weight: 600; color: #56534e; line-height: 1.45; padding: 0 18px; }
   .home-form { display: flex; gap: 16px; justify-content: center; align-items: flex-end; margin-bottom: 20px; flex-wrap: wrap; padding: 0 18px; }
@@ -228,12 +233,38 @@
   #playerName::placeholder { color: var(--gray); font-weight: 600; }
   #playerName:focus { outline: none; border-color: var(--orange); }
   .home-hint { font-size: 12px; font-weight: 700; color: var(--gray); text-transform: uppercase; letter-spacing: 2px; }
+
+  /* ---------- Mobile ---------- */
+  @media (max-width: 700px) {
+    header { padding: 16px 18px; }
+    main { padding: 16px 18px 60px; }
+    .pill { padding: 8px 14px; font-size: 12px; }
+    .hud { gap: 8px; }
+    .cat { font-size: 17px; }
+    .subcat { font-size: 13px; }
+    .bigq { font-size: 32px; padding-right: 92px; }
+    .awardstamp { width: 82px; height: 82px; top: -4px; }
+    .yearval { font-size: 54px; }
+    .rangelabels { margin-bottom: 24px; }
+    #agencyInput { font-size: 18px; }
+    .mediabox { min-height: 220px; }
+    .audioph { min-height: 220px; font-size: 48px; }
+    .rtitle { font-size: 26px; padding-right: 96px; }
+    .stamp { width: 94px; height: 94px; top: -12px; right: 0; }
+    .byline { font-size: 16px; }
+    .factline { font-size: 14px; }
+    .home-logo { font-size: 13vw; }
+    .home-sub { font-size: 15px; margin-bottom: 30px; }
+    .recap .row { grid-template-columns: 56px 1fr auto; gap: 10px; padding: 10px 12px; }
+    .recap img { width: 56px; height: 42px; }
+    .recap .t { font-size: 13px; }
+  }
 </style>
 </head>
 <body>
 <header>
   <div class="logo">
-    <div class="logotext">Les archives<br>du<br><span class="lg-o">Club</span></div>
+    <div class="logotext display-font">Les<br>Archives<br><span class="lg-o">du Club</span></div>
   </div>
   <div class="hud">
     <span class="pill">Manche <b id="hudRound">1</b>/5</span>
@@ -285,7 +316,7 @@
             <circle cx="65" cy="65" r="62" fill="none" stroke="currentColor" stroke-width="2.5"/>
             <path id="stampArc" d="M65,65 m-49,0 a49,49 0 1,1 98,0 a49,49 0 1,1 -98,0" fill="none"/>
             <text font-size="11" font-weight="700" letter-spacing="3.2" fill="currentColor">
-              <textPath href="#stampArc">Les archives du club • Les archives du club</textPath>
+              <textPath href="#stampArc">LES ARCHIVES DU CLUB • LES ARCHIVES DU CLUB</textPath>
             </text>
             <text id="stampPts" x="65" y="64" text-anchor="middle" font-size="26" font-weight="800" fill="currentColor">0</text>
             <text x="65" y="84" text-anchor="middle" font-size="11" font-weight="700" letter-spacing="2" fill="currentColor">PTS / 5000</text>
@@ -328,7 +359,7 @@
 
 <div class="home" id="homeScreen">
   <div>
-    <div class="home-logo">Le Club<br>des D.A.<br><span class="lg-o">Guessr</span></div>
+    <div class="home-logo display-font">Les<br>Archives<br><span class="lg-o">du Club</span></div>
     <p class="home-sub">Devine l'année et l'agence de plus de 300 campagnes primées par le Club des Directeurs Artistiques, de 1968 à aujourd'hui.</p>
     <div class="home-form">
       <input id="playerName" type="text" maxlength="20" placeholder="Ton pseudo…" autocomplete="off" spellcheck="false">
