@@ -13,7 +13,8 @@
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23FF4A11'/%3E%3Ctext x='32' y='44' font-size='34' font-weight='bold' font-family='Helvetica,Arial' text-anchor='middle' fill='%23fff'%3EA%3C/text%3E%3C/svg%3E">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anybody:wdth,wght@125,900&display=swap" rel="stylesheet">
@@ -195,8 +196,17 @@
   .endscreen .of { color: var(--gray); font-weight: 700; margin-bottom: 26px; font-size: 14px; text-transform: uppercase; letter-spacing: 2px; }
   .verdict { font-size: 20px; font-weight: 700; margin-bottom: 40px; color: var(--orange); }
   .endbtns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
-  button.primary.ghost { background: transparent; color: var(--ink); }
-  button.primary.ghost:hover { background: var(--orange); border-color: var(--orange); color: #fff; }
+  .sharebar { display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; margin-bottom: 26px; }
+  .sharelabel { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: var(--gray); margin-right: 6px; }
+  .sharebtn {
+    display: inline-block; padding: 10px 20px; border: 2px solid var(--ink); border-radius: 999px;
+    background: transparent; color: var(--ink); font-size: 13px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 1px; cursor: pointer; font-family: inherit;
+    text-decoration: none; transition: background .12s, color .12s, border-color .12s;
+  }
+  .sharebtn:hover { background: var(--orange); border-color: var(--orange); color: #fff; }
+  .br-desktop { display: inline; }
+  @media (max-width: 700px) { .br-desktop { display: none; } }
   .recap { max-width: 680px; margin: 0 auto 36px; text-align: left; }
   .recap .row {
     display: grid; grid-template-columns: 72px 1fr auto; gap: 16px; align-items: center;
@@ -361,8 +371,14 @@
       <ol class="hoflist" id="hofList"></ol>
     </div>
     <div class="recap" id="recap"></div>
+    <div class="sharebar">
+      <span class="sharelabel">Partager mon score</span>
+      <a class="sharebtn" id="shWa" target="_blank" rel="noopener">WhatsApp</a>
+      <a class="sharebtn" id="shX" target="_blank" rel="noopener">X</a>
+      <a class="sharebtn" id="shLi" target="_blank" rel="noopener">LinkedIn</a>
+      <button class="sharebtn" id="shCopy">Copier</button>
+    </div>
     <div class="endbtns">
-      <button class="primary ghost" id="shareBtn">Partager mon score</button>
       <button class="primary" id="replayBtn">Rejouer</button>
     </div>
   </div>
@@ -376,7 +392,7 @@
 <div class="home" id="homeScreen">
   <div>
     <div class="home-logo display-font">Les<br>Archives<br><span class="lg-o">du Club</span></div>
-    <p class="home-sub">Devine l'année et l'agence de plus de 300 campagnes primées par le Club des Directeurs Artistiques, de 1968 à aujourd'hui.</p>
+    <p class="home-sub">Devine l'année et l'agence de plus de 300 campagnes primées par le Club des Directeurs Artistiques,<br class="br-desktop"> de 1968 à aujourd'hui.</p>
     <div class="home-form">
       <input id="playerName" type="text" maxlength="20" placeholder="Ton pseudo…" autocomplete="off" spellcheck="false">
       <button class="primary" id="startBtn">Jouer</button>
@@ -671,6 +687,7 @@ function endGame(){
   vidWrap.innerHTML = '';
   audioEl.pause();
   finalVal = score;
+  updateShareLinks();
   $('hofForm').style.display = 'none';
   autoSaveScore();
   $('stage').style.display = 'none';
@@ -776,15 +793,21 @@ $('playerName').addEventListener('keydown', e => { if (e.key === 'Enter') startG
 $('playerName').focus();
 
 // ---------- Partage du score ----------
-$('shareBtn').addEventListener('click', async () => {
-  const txt = "J'ai fait " + finalVal.toLocaleString('fr-FR') + " pts sur Les Archives du Club 🏆 Bats-moi ici : https://renaudwas.github.io/LeClubGuessr/";
-  if (navigator.share) {
-    try { await navigator.share({ text: txt }); return; } catch(e) { if (e.name === 'AbortError') return; }
-  }
+const GAME_URL = 'https://renaudwas.github.io/LeClubGuessr/';
+function shareText(){
+  return "J'ai fait " + finalVal.toLocaleString('fr-FR') + " pts sur Les Archives du Club 🏆 Bats-moi ici : " + GAME_URL;
+}
+function updateShareLinks(){
+  const t = encodeURIComponent(shareText());
+  $('shWa').href = 'https://wa.me/?text=' + t;
+  $('shX').href = 'https://twitter.com/intent/tweet?text=' + t;
+  $('shLi').href = 'https://www.linkedin.com/sharing/share-offsite/?url=' + encodeURIComponent(GAME_URL);
+}
+$('shCopy').addEventListener('click', async () => {
   try {
-    await navigator.clipboard.writeText(txt);
-    $('shareBtn').textContent = 'Copié ! Colle-le où tu veux';
-    setTimeout(() => { $('shareBtn').textContent = 'Partager mon score'; }, 2500);
+    await navigator.clipboard.writeText(shareText());
+    $('shCopy').textContent = 'Copié !';
+    setTimeout(() => { $('shCopy').textContent = 'Copier'; }, 2000);
   } catch(e) {}
 });
 </script>
