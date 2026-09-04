@@ -235,6 +235,8 @@
   .hoflist .rank { color: var(--gray); margin-right: 12px; font-weight: 800; }
   .hoflist li.me .rank { color: var(--orange); }
   .hoflist .sc { font-weight: 800; font-variant-numeric: tabular-nums; }
+  .hofcount { font-size: 11px; font-weight: 700; color: var(--gray); letter-spacing: 1px; margin-left: 8px; }
+  .hoflist li.hofsep { justify-content: center; color: var(--gray); padding: 4px; letter-spacing: 4px; }
 
   /* Écran d'accueil */
   .home {
@@ -363,7 +365,7 @@
     <div class="of">points sur 25 000</div>
     <div class="verdict" id="verdict"></div>
     <div class="hof">
-      <h3>Hall of Fame</h3>
+      <h3>Hall of Fame <span id="hofCount" class="hofcount"></span></h3>
       <div class="hofform" id="hofForm">
         <input id="hofName" type="text" maxlength="20" placeholder="Ton pseudo…" autocomplete="off" spellcheck="false">
         <button class="primary" id="hofSave">Enregistrer</button>
@@ -420,13 +422,15 @@ const AUDS = new Map(RAWAUDS);
 const RAWAWDS = [["asap-rocky-tailor-swif-vania-muggia-28976","1"],["vieillir-ca-peut-faire-peur-28801","1"],["les-lettres-de-krakovie-29228","1"],["habillage-de-noel-29030","1"],["suburban-alternatives-enquete-sur-lhabitat-intermediaire-aux-etats-unis-28889","1"],["40-ans-2-28937","1"],["bellissimo-28810","1"],["les-portes-2-28980","1"],["we-also-do-motorcycles-28854","1"],["the-amateur-jersey-28930","1"],["members-experience-29069","1"],["va-chier-28911","1"],["the-final-copy-of-ilon-specht-29271","1"],["olympic-curry-28779","1"],["new-balance-shohei-ohtani-28847","1"],["photo-field-jaxx-by-travis-scott-28822","1"],["un-smartphone-pour-noel-28876","1"],["look-of-the-games-29219","1"],["le-maillot-des-reves-29056","1"],["generator-28662","2"],["edf-x-gims-28555","2"],["come-and-celebrate-together-projet-fictif-28501","2"],["la-maison-the-place-to-projet-fictif-28510","2"],["gare-du-nord-28427","2"],["love-me-tender-28276","2"],["modale-antique-28713","2"],["free-nationals-gangsta-28514","2"],["gesaffelstein-gamma-28517","2"],["la-motrice-liberee-28683","2"],["une-histoire-vraie-vladimir-de-fontenay-28408","2"],["decoder-les-femmes-28545","2"],["greetings-from-la-banlieue-28444","2"],["campagne-descrozaille-28636","2"],["la-vie-chere-3-28639","2"],["rose-fluo-28407","2"],["hippocrate-2023-28616","2"],["hayward-magic-27532","1"],["lappel-2-27574","2"],["aap-ferg-green-juice-ft-pharrell-williams-27353","2"],["le-bon-pote-27619","2"],["une-annee-2020-27602","2"],["graciela-iturbide-heliotropo-37-27697","2"],["festival-documentaire-27674","2"],["avec-plaisir-27426","2"],["killer-social-club-saison-1-27626","2"],["balenciaga-the-lost-tape-27433","2"],["elden-ring-story-trailer-27570","2"],["keep-on-fallin-27583","2"],["merciles2010-27525","2"],["fierement-normal-27338","2"],["sea-and-be-seen-27515","2"],["teddy-riner-27526","2"],["best-story-ever-27524","2"],["ariane-odyssey-27628","2"],["telerama-transclasses-26890","S"],["the-anonymous-project-26861","S"],["electro-de-kraftwerk-a-daft-punk-26860","S"],["europe-des-voyageurs-26544","S"],["statistiques-26582","S"],["massalia-ghost-26808","S"],["true-colors-26551","S"],["spoiler-codes-26503","S"],["echos-26439","S"],["green-dawn-26490","S"],["big-bad-wolves-26497","S"],["the-cemetery-rainbow-six-siege-26556","S"],["cako-26877","S"],["voyage-26878","S"],["vw-stories-illu-26690","S"],["scenarios-presse-26573","S"],["kekra-putain-de-salaire-26715","S"],["the-realest-ad-29048","2"],["retrouvons-notre-fraternite-28923","2"],["la-campagne-la-plus-solidaire-29009","2"],["conduisez-comme-une-femme-28878","2"],["pas-a-vendre-28928","3"],["les-centenaires-28951","3"],["batarddonneur-28353","S"],["born-in-1853-made-for-the-future-28588","S"],["reaverse-27886","S"],["design-global-aema-groupe-27646","S"],["aninvitationtopiquia-27202","S"],["fake-4-good-26512","2"],["la-ruche-a-plein-de-choses-a-dire-27000","S"],["le-jour-ou-les-anges-ont-pleure-27718","S"],["les-cesars-hollywood-institute-27870","3"],["horse-28725","1"],["art-unlocked-the-very-illegal-exhibition-29131","S"],["compte-instagram-benjamin-schmuck-26882","2"],["la-vie-film-26969","3"],["engie-no-energy-to-waste-27370","3"],["soyez-lhomme-que-vous-voulez-etre-28202","2"],["out-side-livre-28347","3"],["130-ans-illustrations-patrimoine-28904","2"],["post-racism-26561","3"],["co2ncious-digital-27205","3"],["changer-nous-fait-avancer-27580","S"],["inside-jobs-27899","2"],["tiffanys-reasons-to-smile-28728","2"],["the-substance-generique-28881","S"],["rebuild-the-world-affiche-26476","1"],["ne-gardez-que-le-meilleur-de-la-france-26992","1"],["be-dandy-27643","S"],["celui-qui-a-tout-fait-tout-seul-27836","3"],["forever-crispy-2-28344","3"],["karma-29087","S"],["dis-joe-26565","3"],["ecoutez-le-monde-changer-2-27103","3"],["haters-gonna-hate-27522","S"],["deuxieme-reve-print-27888","2"],["noel-2023-28757","3"],["devil-may-cry-29012","S"],["paysages-26642","3"],["vous-pouvez-le-faire-27067","3"],["desole-kad-27581","S"],["josman-ahgars-27775","3"],["le-pouvoir-du-chat-28535","3"],["terrains-de-jeux-29166","S"],["womb-26835","2"],["la-mobilite-vertueuse-27245","3"],["ysl-islande-27447","S"],["desole-les-chats-2-28071","3"],["cair-28761","3"],["fen-28813","S"],["everything-looks-bigger-closer-26594","3"],["betc-in-one-thousand-letters-27158","2"],["city-riders-27647","S"],["astrology-club-28239","2"],["gta-28691","3"],["idents-de-noel-2-29025","3"],["biiip-26586","1"],["lart-du-silence-27102","3"],["face-au-sida-27618","S"],["review-hacking-27904","2"],["exit-28646","3"],["agorespace-29262","3"],["oh-my-dog-26662","3"],["violence-policiere-26964","3"],["lisa-zimouche-playground-by-courtside-27708","S"],["le-8-hypnose-27968","3"],["un1que-28603","3"],["lanniversaire-de-trop-28865","S"],["1-jour-1-dessin-26894","1"],["adidas-basics-x-pharell-williams-27252","2"],["le-bal-des-folles-27364","S"],["en-corps-28238","2"],["leaning-into-your-palms-28393","3"],["une-saison-au-frac-bretagne-29210","S"],["comme-si-by-doan-ly-26771","3"],["co2ncious-innovation-27210","2"],["cest-clair-27558","S"],["la-deforestation-nest-pas-une-fiction-27806","3"],["coke-creations-x-rosalia-28317","3"],["cash-app-brand-guidelines-29258","3"],["bucket-bangers-26674","1"],["la-vie-print-26976","2"],["albatros-27611","S"],["nike-never-settle-never-done-27737","2"],["decathlon-jo-2024-28570","3"],["homerun-29259","3"],["fashion-eye-26840","2"],["ami-27209","2"],["le-monde-diplomatique-27608","S"],["sos-migrants-28023","3"],["mugler-show-ss24-28330","S"],["lattente-29159","2"],["new-office-the-ads-31032019-31032020-de-florence-jung-26850","1"],["emergency-bikes-27028","2"],["epiphany-21588","3"],["nike-les-30-ans-de-jordan-a-paris-21959","3"],["opera-national-de-paris-3e-scene-la-grande-sortie-21801","3"],["popcorn-garage-21355","3"],["saint-etienne-biennale-internationale-de-saint-etienne-21947","3"],["dashboard-21446","3"],["stylist-21906","3"],["orcines-21226","3"],["snackholidays-2-21790","3"],["tu-nantes-tu-nantes-scene-conventionnee-theatre-21913","3"],["le-marathonien-21488","3"],["long-lasting-sharpness-2-21342","3"],["ou-est-le-poisson-21204","S"],["oui-fm-19946-19946","1"],["piper-heidsieck-18141-18141","2"],["mieux-informes-18101","2"],["magiczaozacom-17890","2"],["risk-3-17814","2"],["brise-auto-16261","S"],["sidaction-ensemble-contre-le-sida-16623","S"],["sncf-eurostar-16297-16297","S"],["ps2-16119-16119","S"],["le-monde-14911-14911","S"],["le-nouvel-observateur-14922","S"],["les-petits-freres-des-pauvres-14670","S"],["les-petits-freres-des-pauvres-14989-14989","S"],["mars-14968","S"],["mc-cain-15016-15016","S"],["3-suisses-catalogue-13544","S"],["afaa-13294","S"],["aides-12981-12981","S"],["arthur-martin-13477","S"],["artron-schneider-12907","S"],["association-pour-la-promotion-des-arts-13171","S"],["audi-12813-12813","S"],["quenelles-petitjean-11178","M"],["ratp-11367-11367","M"],["rodier-11059-11059","M"],["schneider-11162-11162","M"],["les-pommes-11066","M"],["soupline-11163","M"],["tam-tam-sagaie-10942","M"],["apres-rasage-9552-9552","S"],["sunkist-2-9686","S"],["surface-3-9737","S"],["tang-9672-9672","S"],["fromage-9807-9807","S"],["tele-poche-9739-9739","S"],["theatre-des-champs-elysees-9628","S"],["toblerone-2-9711","S"],["transport-urbain-2-9706","S"],["vins-9627-9627","S"],["meubles-2-9658","S"],["ville-du-puy-ville-du-puy-9772","S"],["vin-chateau-la-berriere-vins-9773","S"],["wrangler-3-9648","S"],["findus-7069","S"],["flammarion-flammarion-2-6951","S"],["francine-7054-7054","S"],["galeries-lafayette-6868-6868","S"],["general-motors-france-6877","S"],["gervillage-3-7071","S"],["gervais-petit-suisse-6794","S"],["gervais-danone-7049-7049","S"],["terraillon-2175-2175","1"],["uniroyal-pneus-7-2330","1"],["japan-air-lines-2322-2322","J"],["locasim-2-2312","J"],["diparco-912","3"],["vetements-pour-enfants-1010-1010","3"],["rodier-1074-1074","3"],["twa-901-901","3"],["alliance-francaise-2-840","S"],["les-20-ans-25758","1"],["apero-casaq-21223","3"],["little-big-change-26150","S"],["sorry-21820","S"],["solidarite-femmes-22030","S"],["up-2-25640","S"],["artazart-panoramiques-pierre-de-vallombreuse-artazart-panoramiques-pierre-de-vallombreuse-26424","S"],["le-robot-25622","S"],["wwf-26190-26190","S"],["her-we-choose-25687","S"],["paypal-26320","S"],["lueurs-despoir-21542","S"],["trump-22017","S"],["volvo-group-25802","3"],["viparis-26412","S"],["rivages-21784","3"],["red-dot-25581","3"],["netflixcanal-26069","S"],["water-for-africa-water-for-africa-21949","1"],["petit-bateau-22104-22104","S"],["target-of-the-world-25563","2"],["andros-3-26185","2"],["mouv-21429","S"],["endless-debate-25547","S"],["dagoma-26241-26241","1"],["maison-crispi-21946","S"],["canalt-22085","S"],["the-thin-red-path-25937","1"],["mad-3-26060","S"],["naissance-21291","S"],["ubisoft-starlink-26151","S"],["pronto-cafe-22066","S"],["petit-bateau-25589","S"],["les-hamster-21829","S"],["smart-forfour-22057","S"],["acadomia-2-25599","S"],["la-charge-21775","S"],["beach-beach-beach-22098","S"],["fondation-cartier-pour-lart-contemporain-26005","S"],["coty-miu-miu-26308","2"],["mac-val-21937","3"],["charleroi-danse-26017","S"],["ichon-26268","2"],["theorie-kenneth-goldsmith-21900","S"],["canal-x-22157","S"],["navya-25798","S"],["printemps-haussmann-26204","S"]];
 const AWDS = new Map(RAWAWDS);
 
-const HIRES = '?fm=jpg&q=85&w=1400&fit=max';
-const THUMB = '?fm=jpg&q=70&w=300&fit=max';
+// webp 900px : ~60% plus léger que le jpg 1400 d'avant (crucial sur un wifi d'événement saturé)
+const HIRES = '?fm=webp&q=80&w=900&fit=max';
+const ZOOM  = '?fm=jpg&q=88&w=2000&fit=max';
+const THUMB = '?fm=webp&q=70&w=200&fit=max';
 const PH_THUMB = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="120" height="90"><rect width="120" height="90" fill="#FF4A11"/><text x="60" y="58" font-size="36" text-anchor="middle" fill="#fff">♪</text></svg>');
 
 const EXCLUDED = ['concours etudiant', 'typographie', 'design d espaces', 'concours futurs desirables', 'prod son', 'prod vfx & animation'];
 const catNorm = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[’']/g,' ');
-const CAMPAIGNS = RAW.filter(r => (r[5][0] !== 'O' || AUDS.has(r[6])) && !EXCLUDED.includes(catNorm(r[1]))).map(r => {
+const ALL_CAMPAIGNS = RAW.filter(r => (r[5][0] !== 'O' || AUDS.has(r[6])) && !EXCLUDED.includes(catNorm(r[1]))).map(r => {
   const [title, cat, year, agency, client, img, slug] = r;
   const yr = year.split('-').map(Number);
   const base = img[0] === 'O' ? null : PREFIX[img[0]] + img.slice(2);
@@ -446,6 +450,36 @@ const CAMPAIGNS = RAW.filter(r => (r[5][0] !== 'O' || AUDS.has(r[6])) && !EXCLUD
 
 const AWARD_LABELS = { '1': '1ER PRIX', '2': '2ÈME PRIX', '3': '3ÈME PRIX', 'S': 'SHORTLIST', 'M': 'MENTION', 'J': 'PRIX SPÉCIAL' };
 
+// --- Anti-doublons ---------------------------------------------------------
+// Certaines campagnes sont inscrites plusieurs fois aux archives (une entrée par
+// catégorie). Deux niveaux de protection :
+//   1. visualKey  : deux entrées qui partagent le MÊME fichier image sont fusionnées
+//                   dès le chargement (ex. ARTE "Habillage de Noël" / "Idents de Noël").
+//   2. campaignKey: agence + annonceur + année. Deux entrées qui la partagent sont
+//                   la même campagne déclinée (ex. "La vie - Film" / "La vie - Print") :
+//                   on n'en tire qu'une seule par partie.
+function visualKey(c){
+  if (!c.imgBase) return 'slug:' + c.slug;
+  const file = c.imgBase.split('/').pop().replace(/^\d{4}_\d+--cover-\d+-/, '');
+  const stem = file.replace(/\.[a-z]+$/i, '');
+  // Un nom trop court ("01.jpg", "1.png") n'identifie pas un visuel : deux campagnes
+  // sans rapport peuvent le porter. On ne fusionne que sur un nom réellement distinctif.
+  if (stem.length < 8) return 'slug:' + c.slug;
+  return 'img:' + file;
+}
+function campaignKey(c){
+  return norm(c.agency) + '|' + norm(c.client) + '|' + c.yearLabel;
+}
+const CAMPAIGNS = (() => {
+  const seenVisual = new Set();
+  return ALL_CAMPAIGNS.filter(c => {
+    const k = visualKey(c);
+    if (seenVisual.has(k)) return false;
+    seenVisual.add(k);
+    return true;
+  });
+})();
+
 const AGENCIES = [...new Set(CAMPAIGNS.map(c => c.agency))].sort((a,b)=>a.localeCompare(b,'fr'));
 const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')
   .replace(/[^a-z0-9]+/g,' ').trim();
@@ -453,6 +487,8 @@ const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')
 // ---------- Game state ----------
 const ROUNDS = 5;
 let pool = [], order = [], round = 0, score = 0, results = [];
+let usedKeys = new Set();   // campagnes déjà servies dans la partie en cours
+let nextPreload = null;     // campagne préchargée pour la manche suivante
 
 function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 
@@ -482,6 +518,8 @@ function newGame(){
     recent: shuffle(base.filter(c => c.yMin >= 2000)),
     old: shuffle(base.filter(c => c.yMin < 2000))
   };
+  usedKeys = new Set();
+  nextPreload = null;
   order = []; round = 0; score = 0; results = [];
   $('endScreen').classList.remove('show');
   $('stage').style.display = 'block';
@@ -489,26 +527,44 @@ function newGame(){
   nextRound();
 }
 
+// Tire une campagne encore jamais servie dans cette partie (cf. campaignKey).
+function drawCampaign(){
+  for (let attempt = 0; attempt < 60; attempt++) {
+    const arr = (Math.random() < 0.75 && pool.recent.length) ? pool.recent
+              : (pool.old.length ? pool.old : pool.recent);
+    if (!arr.length) return null;
+    const c = arr.pop();
+    if (usedKeys.has(campaignKey(c))) continue; // même campagne déjà tombée : on repioche
+    usedKeys.add(campaignKey(c));
+    return c;
+  }
+  return null;
+}
+
 function pickCampaign(cb){
-  // 75% de chances de piocher dans le récent (2000+), sinon dans l'ancien
-  const arr = (Math.random() < 0.75 && pool.recent.length) ? pool.recent
-            : (pool.old.length ? pool.old : pool.recent);
-  if (!arr.length) { cb(null); return; }
-  const c = arr.pop();
+  const c = drawCampaign();
+  if (!c) { cb(null); return; }
   markSeen(c.slug);
   if (!c.imgBase) { c.imgOk = false; cb(c); return; } // audio sans visuel
+  // On tente de précharger l'image, mais on n'abandonne JAMAIS la campagne pour
+  // cause de lenteur réseau : au pire on l'affiche et l'image arrive après coup.
   const test = new Image();
   let done = false;
-  const finish = ok => {
-    if (done) return; done = true;
-    if (ok) { c.imgOk = true; cb(c); }
-    else if (c.audio || c.video) { c.imgOk = false; cb(c); }
-    else pickCampaign(cb);
-  };
+  const finish = ok => { if (done) return; done = true; c.imgOk = ok; cb(c); };
   test.onload = () => finish(true);
   test.onerror = () => finish(false);
-  setTimeout(() => finish(false), 7000);
+  setTimeout(() => finish(true), 2500); // réseau lent : on affiche sans plus attendre
   test.src = c.img;
+}
+
+// Précharge la manche suivante pendant que le joueur réfléchit : sur réseau
+// saturé, la campagne d'après s'affiche instantanément.
+function preloadNext(){
+  if (nextPreload || round >= ROUNDS) return;
+  const c = drawCampaign();
+  if (!c) return;
+  nextPreload = c;
+  if (c.imgBase) { const i = new Image(); i.src = c.img; }
 }
 
 let current = null;
@@ -530,7 +586,14 @@ function nextRound(){
   $('mediaTag').style.display = 'none';
   $('catHint').textContent = '…';
   $('imgLoading').style.display = 'block';
-  pickCampaign(c => {
+  // si la manche a été préchargée, on la sert immédiatement
+  const served = nextPreload;
+  nextPreload = null;
+  const handoff = cb => {
+    if (served) { markSeen(served.slug); served.imgOk = served.imgBase ? true : false; cb(served); }
+    else pickCampaign(cb);
+  };
+  handoff(c => {
     if (!c) { endGame(); return; }
     current = c;
     $('catHint').textContent = c.cat;
@@ -613,6 +676,7 @@ function submitGuess(){
   $('guessPanel').style.display = 'none';
   $('revealPanel').classList.add('show');
   $('nextBtn').textContent = round === ROUNDS ? 'Voir le score final' : 'Manche suivante';
+  preloadNext(); // pendant que le joueur lit, on charge la manche d'après
 }
 
 // ---------- Hall of Fame mondial (Supabase) ----------
@@ -621,26 +685,51 @@ const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const sbHeaders = { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' };
 const NAME_KEY = 'clubdesda_guessr_name';
 let finalVal = 0;
+// Le classement ne garde que le MEILLEUR score de chaque pseudo : sans ça, une
+// personne qui enchaîne les parties monopolise tout le top 10 (constaté en test).
 async function fetchHof(){
   try {
-    const r = await fetch(SB_URL + '/rest/v1/hof?select=name,score,created_at&order=score.desc,created_at.asc&limit=10', { headers: sbHeaders });
+    const r = await fetch(SB_URL + '/rest/v1/hof?select=name,score,created_at&order=score.desc,created_at.asc&limit=1000', { headers: sbHeaders });
     if (!r.ok) throw 0;
-    return await r.json();
+    const rows = await r.json();
+    const best = new Map();
+    rows.forEach(e => {
+      const k = e.name.trim().toLowerCase();
+      if (!best.has(k) || e.score > best.get(k).score) best.set(k, e);
+    });
+    return [...best.values()].sort((a, b) => b.score - a.score || new Date(a.created_at) - new Date(b.created_at));
   } catch(e){ return null; }
 }
+
 async function renderHof(hl){
   const ol = $('hofList');
   ol.innerHTML = '<li>Chargement du classement…</li>';
   const list = await fetchHof();
   ol.innerHTML = '';
   if (!list) { ol.innerHTML = '<li>Classement indisponible (connexion ?)</li>'; return; }
-  let marked = false;
-  list.forEach((e, i) => {
+
+  const myKey = hl ? hl.name.trim().toLowerCase() : null;
+  const myRank = myKey ? list.findIndex(e => e.name.trim().toLowerCase() === myKey) : -1;
+
+  const row = (e, i) => {
     const li = document.createElement('li');
-    if (hl && !marked && e.name === hl.name && e.score === hl.score) { li.className = 'me'; marked = true; }
+    if (myRank >= 0 && i === myRank) li.className = 'me';
     li.innerHTML = '<span><span class="rank">' + (i+1) + '.</span>' + esc(e.name) + '</span><span class="sc">' + e.score.toLocaleString('fr-FR') + '</span>';
-    ol.appendChild(li);
-  });
+    return li;
+  };
+  list.slice(0, 10).forEach((e, i) => ol.appendChild(row(e, i)));
+
+  // Si le joueur n'est pas dans le top 10, on lui montre quand même sa ligne
+  if (myRank >= 10) {
+    const sep = document.createElement('li');
+    sep.className = 'hofsep';
+    sep.innerHTML = '<span>⋯</span>';
+    ol.appendChild(sep);
+    ol.appendChild(row(list[myRank], myRank));
+  }
+  $('hofCount').textContent = list.length > 0
+    ? list.length + ' joueur' + (list.length > 1 ? 's' : '') + (myRank >= 0 ? ' · tu es ' + (myRank + 1) + (myRank === 0 ? 'er' : 'e') : '')
+    : '';
 }
 $('hofSave').addEventListener('click', async () => {
   const n = $('hofName').value.trim().slice(0, 20);
@@ -720,7 +809,7 @@ function esc(s){ const d=document.createElement('span'); d.textContent=s; return
 const lb = $('lightbox'), lbImg = $('lbImg');
 img.addEventListener('click', () => {
   if (!current) return;
-  lbImg.src = current.imgBase + '?fm=jpg&q=90&w=2200&fit=max';
+  lbImg.src = current.imgBase + ZOOM;
   lbImg.classList.remove('zoomed');
   lb.classList.add('show');
 });
